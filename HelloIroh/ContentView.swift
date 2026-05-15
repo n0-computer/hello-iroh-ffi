@@ -4,12 +4,14 @@ struct ContentView: View {
     @State private var motion = MotionSource()
     @State private var peer: IrohPeer?
     @State private var peerIdInput: String = ""
+    @State private var apiSecretInput: String = ""
 
     var body: some View {
         VStack(spacing: 12) {
             if let peer {
                 header(peer: peer)
                 connectBar(peer: peer)
+                telemetryBar(peer: peer)
                 BallScene(
                     selfPosition: motion.position,
                     remotePosition: peer.remotePosition,
@@ -69,6 +71,37 @@ struct ContentView: View {
             .font(.caption)
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private func telemetryBar(peer: IrohPeer) -> some View {
+        HStack(spacing: 8) {
+            SecureField("iroh services API secret (services1…)", text: $apiSecretInput)
+                .textFieldStyle(.roundedBorder)
+                .font(.system(.caption, design: .monospaced))
+                .autocorrectionDisabled(true)
+                #if os(iOS)
+                .textInputAutocapitalization(.never)
+                #endif
+            Button("Save") {
+                Task { await peer.saveApiSecret(apiSecretInput) }
+            }
+            .buttonStyle(.bordered)
+            .disabled(apiSecretInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        }
+        Text(telemetryLine(for: peer.telemetry))
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func telemetryLine(for state: IrohPeer.TelemetryState) -> String {
+        switch state {
+        case .off: return "telemetry off — paste an API secret from services.iroh.computer to enable"
+        case .starting: return "telemetry: connecting…"
+        case .active(let name): return "telemetry: pushing as \(name)"
+        case .error(let msg): return "telemetry error: \(msg)"
+        }
     }
 
     private var dragHandler: ((SIMD2<Float>) -> Void)? {

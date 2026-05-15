@@ -19,15 +19,27 @@ final class IrohPeer {
         case error(String)
     }
 
+    enum TelemetryState: Equatable {
+        case off
+        case starting
+        case active(name: String)
+        case error(String)
+    }
+
     let motion: MotionSource
     var endpointId: String = ""
     var state: ConnectionState = .idle
     var remotePosition: SIMD2<Float>? = nil
+    var telemetry: TelemetryState = .off
+    var apiSecret: String = UserDefaults.standard.string(forKey: IrohPeer.apiSecretKey) ?? ""
+
+    static let apiSecretKey = "iroh.helloiroh.apiSecret"
 
     private var endpoint: Endpoint?
     private var acceptTask: Task<Void, Never>?
     private var currentSession: PeerSession?
     private var identity: IdentityStore?
+    private var services: ServicesClient?
 
     init(motion: MotionSource) {
         self.motion = motion
@@ -50,9 +62,50 @@ final class IrohPeer {
             acceptTask = Task { [weak self] in
                 await self?.runAcceptLoop(ep)
             }
+            await startServicesClient()
         } catch {
             state = .error("bind failed: \(error)")
         }
+    }
+
+    func saveApiSecret(_ secret: String) async {
+        let trimmed = secret.trimmingCharacters(in: .whitespacesAndNewlines)
+        apiSecret = trimmed
+        UserDefaults.standard.set(trimmed, forKey: Self.apiSecretKey)
+        await startServicesClient()
+    }
+
+    private func startServicesClient() async {
+        services = nil
+        let secret = apiSecret
+        guard !secret.isEmpty else {
+            telemetry = .off
+            return
+        }
+        guard let ep = endpoint else { return }
+        telemetry = .starting
+        let name = deviceName()
+        do {
+            let client = try await ServicesClient.create(
+                endpoint: ep,
+                options: ServicesOptions(apiSecret: secret, name: name)
+            )
+            services = client
+            telemetry = .active(name: name)
+        } catch {
+            telemetry = .error("\(error)")
+        }
+    }
+
+    private func deviceName() -> String {
+        let short = String(endpointId.prefix(8))
+        #if os(iOS)
+        return "ios-\(short)"
+        #elseif os(macOS)
+        return "macos-\(short)"
+        #else
+        return "ball-\(short)"
+        #endif
     }
 
     func connect(toEndpointIdHex hex: String) async {
