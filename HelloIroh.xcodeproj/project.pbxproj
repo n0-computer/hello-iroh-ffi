@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		9FCDCB0C2FB7700000FD70BF /* IrohLib in Frameworks */ = {isa = PBXBuildFile; productRef = 9FCDCB0D2FB7700000FD70BF /* IrohLib */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		9FCDCAB92FB767D200FD70BF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9FCDCB0C2FB7700000FD70BF /* IrohLib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +117,7 @@
 			);
 			name = HelloIroh;
 			packageProductDependencies = (
+				9FCDCB0D2FB7700000FD70BF /* IrohLib */,
 			);
 			productName = HelloIroh;
 			productReference = 9FCDCAAA2FB767D100FD70BF /* HelloIroh.app */;
@@ -195,6 +201,9 @@
 			);
 			mainGroup = 9FCDCAA12FB767D100FD70BF;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				9FCDCB0B2FB76F3400FD70BF /* XCLocalSwiftPackageReference "../../iroh-ffi" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9FCDCAAB2FB767D100FD70BF /* Products */;
 			projectDirPath = "";
@@ -391,8 +400,10 @@
 				CODE_SIGN_ENTITLEMENTS = HelloIroh/HelloIroh.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_PREVIEWS = YES;
+				DEVELOPMENT_TEAM = 3N5967R866;
+				ENABLE_PREVIEWS = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMotionUsageDescription = "Used to tilt the demo ball based on device motion.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -404,6 +415,8 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				"OTHER_LDFLAGS[sdk=iphoneos*]" = "-framework Network";
+				"OTHER_LDFLAGS[sdk=iphonesimulator*]" = "-framework Network";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.5;
@@ -412,10 +425,11 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				XROS_DEPLOYMENT_TARGET = 2.5;
 			};
 			name = Debug;
@@ -428,8 +442,10 @@
 				CODE_SIGN_ENTITLEMENTS = HelloIroh/HelloIroh.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_PREVIEWS = YES;
+				DEVELOPMENT_TEAM = 3N5967R866;
+				ENABLE_PREVIEWS = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMotionUsageDescription = "Used to tilt the demo ball based on device motion.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -441,6 +457,8 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				"OTHER_LDFLAGS[sdk=iphoneos*]" = "-framework Network";
+				"OTHER_LDFLAGS[sdk=iphonesimulator*]" = "-framework Network";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.5;
@@ -449,10 +467,11 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				XROS_DEPLOYMENT_TARGET = 2.5;
 			};
 			name = Release;
@@ -583,6 +602,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		9FCDCB0B2FB76F3400FD70BF /* XCLocalSwiftPackageReference "../../iroh-ffi/IrohLib" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../../iroh-ffi/IrohLib";
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		9FCDCB0D2FB7700000FD70BF /* IrohLib */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = IrohLib;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 9FCDCAA22FB767D100FD70BF /* Project object */;
 }
