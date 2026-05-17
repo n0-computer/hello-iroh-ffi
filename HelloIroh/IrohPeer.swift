@@ -27,13 +27,17 @@ final class IrohPeer {
     }
 
     let motion: MotionSource
+    let game = PongGame()
+
     var endpointId: String = ""
     var state: ConnectionState = .idle
-    var remotePosition: SIMD2<Float>? = nil
     var telemetry: TelemetryState = .off
     var apiSecret: String = UserDefaults.standard.string(forKey: IrohPeer.apiSecretKey) ?? ""
 
     static let apiSecretKey = "iroh.helloiroh.apiSecret"
+    static let defaultApiSecret = "servicesaaqg6nnf7kr3uiacviqgbxeqconvhuz4ldr5dem4gqhsp3cyat6qxexoctwjsi7m6dh2t2qvfu2yhdoaav6eibaj4aaavhonlixbohceu4aa"
+
+    var isUsingDefaultApiSecret: Bool { apiSecret.isEmpty }
 
     private var endpoint: Endpoint?
     private var acceptTask: Task<Void, Never>?
@@ -77,11 +81,7 @@ final class IrohPeer {
 
     private func startServicesClient() async {
         services = nil
-        let secret = apiSecret
-        guard !secret.isEmpty else {
-            telemetry = .off
-            return
-        }
+        let secret = apiSecret.isEmpty ? Self.defaultApiSecret : apiSecret
         guard let ep = endpoint else { return }
         telemetry = .starting
         let name = deviceName()
@@ -104,7 +104,7 @@ final class IrohPeer {
         #elseif os(macOS)
         return "macos-\(short)"
         #else
-        return "ball-\(short)"
+        return "pong-\(short)"
         #endif
     }
 
@@ -120,7 +120,7 @@ final class IrohPeer {
         do {
             let conn = try await ep.connect(addr: addr, alpn: WireFormat.alpn)
             let bi = try await conn.openBi()
-            adoptSession(bi: bi, remoteIdHex: parsed.description)
+            adoptSession(bi: bi, remoteIdHex: parsed.description, asAuthority: true)
         } catch {
             state = .error("connect failed: \(error)")
         }
@@ -145,22 +145,30 @@ final class IrohPeer {
                 let conn = try await accepting.connect()
                 let bi = try await conn.acceptBi()
                 let remoteId = conn.remoteId().description
-                adoptSession(bi: bi, remoteIdHex: remoteId)
+                adoptSession(bi: bi, remoteIdHex: remoteId, asAuthority: false)
             } catch {
                 continue
             }
         }
     }
 
-    private func adoptSession(bi: BiStream, remoteIdHex: String) {
+    private func adoptSession(bi: BiStream, remoteIdHex: String, asAuthority: Bool) {
         currentSession?.stop()
+        game.resetForNewSession(asAuthority: asAuthority)
+        let game = self.game
+        let motion = self.motion
         let session = PeerSession(
             bi: bi,
-            getLocalPosition: { [weak self] in
-                await MainActor.run { self?.motion.position ?? .zero }
+            produceFrames: {
+                await MainActor.run {
+                    game.produceTickFrames(myPaddleX: motion.paddleX)
+                }
             },
-            onRemotePosition: { [weak self] pos in
-                Task { @MainActor in self?.remotePosition = pos }
+            onPaddleReceived: { x in
+                Task { @MainActor in game.receivedOpponentPaddle(x: x) }
+            },
+            onBallReceived: { payload in
+                Task { @MainActor in game.receivedBall(payload: payload) }
             },
             onClosed: { [weak self] in
                 Task { @MainActor in self?.handleSessionClosed() }
@@ -175,7 +183,7 @@ final class IrohPeer {
     private func handleSessionClosed() {
         guard currentSession != nil else { return }
         currentSession = nil
-        remotePosition = nil
+        game.sessionEnded()
         if case .connected = state { state = .ready }
     }
 }

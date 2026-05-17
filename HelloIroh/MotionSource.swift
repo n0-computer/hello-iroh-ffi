@@ -7,7 +7,7 @@ import CoreMotion
 @MainActor
 @Observable
 final class MotionSource {
-    var position: SIMD2<Float> = .zero
+    var paddleX: Float = 0
 
     #if os(iOS)
     private let manager = CMMotionManager()
@@ -20,8 +20,7 @@ final class MotionSource {
         manager.startDeviceMotionUpdates(to: .main) { [weak self] motion, _ in
             guard let self, let g = motion?.gravity else { return }
             let x = Float(max(-1.0, min(1.0, g.x)))
-            let y = Float(max(-1.0, min(1.0, -g.y)))
-            self.position = SIMD2(x, y)
+            self.paddleX = x
         }
         #endif
     }
@@ -32,10 +31,7 @@ final class MotionSource {
         #endif
     }
 
-    func setFromDrag(normalized: SIMD2<Float>) {
-        position = SIMD2(
-            max(-1, min(1, normalized.x)),
-            max(-1, min(1, normalized.y))
-        )
+    func setFromDrag(x: Float) {
+        paddleX = max(-1, min(1, x))
     }
 }

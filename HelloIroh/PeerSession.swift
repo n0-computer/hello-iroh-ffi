@@ -2,9 +2,12 @@ import Foundation
 import IrohLib
 
 final class PeerSession: @unchecked Sendable {
+    typealias FrameProducer = @Sendable () async -> (paddle: Data, ball: Data?)
+
     private let bi: BiStream
-    private let getLocalPosition: @Sendable () async -> SIMD2<Float>
-    private let onRemotePosition: @Sendable (SIMD2<Float>) -> Void
+    private let produceFrames: FrameProducer
+    private let onPaddleReceived: @Sendable (Float) -> Void
+    private let onBallReceived: @Sendable (WireFormat.BallPayload) -> Void
     private let onClosed: @Sendable () -> Void
 
     private var sendTask: Task<Void, Never>?
@@ -12,13 +15,15 @@ final class PeerSession: @unchecked Sendable {
 
     init(
         bi: BiStream,
-        getLocalPosition: @escaping @Sendable () async -> SIMD2<Float>,
-        onRemotePosition: @escaping @Sendable (SIMD2<Float>) -> Void,
+        produceFrames: @escaping FrameProducer,
+        onPaddleReceived: @escaping @Sendable (Float) -> Void,
+        onBallReceived: @escaping @Sendable (WireFormat.BallPayload) -> Void,
         onClosed: @escaping @Sendable () -> Void
     ) {
         self.bi = bi
-        self.getLocalPosition = getLocalPosition
-        self.onRemotePosition = onRemotePosition
+        self.produceFrames = produceFrames
+        self.onPaddleReceived = onPaddleReceived
+        self.onBallReceived = onBallReceived
         self.onClosed = onClosed
     }
 
@@ -38,12 +43,14 @@ final class PeerSession: @unchecked Sendable {
 
     private func runSendLoop() async {
         let send = bi.send()
-        let tickNs: UInt64 = 33_000_000
+        let tickNs: UInt64 = 16_666_000
         while !Task.isCancelled {
-            let pos = await getLocalPosition()
-            let frame = WireFormat.encode(x: pos.x, y: pos.y)
+            let (paddle, ball) = await produceFrames()
             do {
-                try await send.writeAll(buf: frame)
+                try await send.writeAll(buf: paddle)
+                if let ball {
+                    try await send.writeAll(buf: ball)
+                }
             } catch {
                 break
             }
@@ -56,9 +63,21 @@ final class PeerSession: @unchecked Sendable {
         let recv = bi.recv()
         while !Task.isCancelled {
             do {
-                let frame = try await recv.readExact(size: WireFormat.frameSize)
-                if let (x, y) = WireFormat.decode(frame) {
-                    onRemotePosition(SIMD2(x, y))
+                let tagData = try await recv.readExact(size: 1)
+                guard let tag = tagData.first else { break }
+                switch tag {
+                case WireFormat.tagPaddle:
+                    let body = try await recv.readExact(size: WireFormat.paddleFrameSize - 1)
+                    if let x = WireFormat.decodePaddleBody(body) {
+                        onPaddleReceived(x)
+                    }
+                case WireFormat.tagBall:
+                    let body = try await recv.readExact(size: WireFormat.ballFrameSize - 1)
+                    if let payload = WireFormat.decodeBallBody(body) {
+                        onBallReceived(payload)
+                    }
+                default:
+                    return
                 }
             } catch {
                 break
