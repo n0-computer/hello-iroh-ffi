@@ -2,7 +2,7 @@
 
 A small iOS + macOS demo built on [iroh](https://github.com/n0-computer/iroh) via the [iroh-ffi](https://github.com/n0-computer/iroh-ffi) Swift bindings.
 
-Each peer renders two balls — its own and the remote peer's — connected over an iroh bi-directional stream. On iOS, the local ball follows device gravity via CoreMotion. On macOS, you drag it with the mouse. Discovery is manual: copy your endpoint id, paste it on the other peer, tap Connect.
+Two peers connect over an iroh bi-directional stream and play a round of Pong. Paddles move with device tilt on iOS (CoreMotion gravity) or a mouse drag on macOS. Discovery is manual: copy your endpoint id, paste it on the other peer, tap Connect.
 
 The endpoint id is persisted across launches, so the copy/paste happens once and the demo keeps working session over session.
 
@@ -53,17 +53,33 @@ Open `HelloIroh.xcodeproj` in Xcode. The project has a single multiplatform Swif
 - **iOS Simulator**: pick any iPhone simulator destination and Run.
 - **iOS device**: select your device, signed with your team. The first time, trust the developer certificate under **Settings → General → VPN & Device Management**.
 
-The app launches into a small UI: your full endpoint id at the top with a Copy button, a text field for the peer's endpoint id with a Connect button, and a canvas underneath where the two balls live.
+The app launches into a small UI: your full endpoint id at the top with a Copy button and a gear (Settings), a text field for the peer's endpoint id with a Connect button, and the Pong field underneath.
 
-## Use the demo
+## Play the demo
 
 1. Build and run on two devices (e.g. your Mac and an iPhone, or two iPhones).
 2. On device A, tap **Copy** and send the id to device B (Messages, AirDrop, whatever).
 3. On device B, paste into the **Peer endpoint id** field and tap **Connect**.
-4. Tilt the iPhone — its ball drifts in the direction of gravity, and the remote ball appears in the same position on the Mac (and vice versa).
-5. On the Mac, drag the ball with the mouse to move it; the iPhone sees it too.
+4. The peer that tapped Connect is the **ball authority** — it simulates the ball physics and streams ball state. The other peer is paddle-only.
+5. Tilt your iPhone left/right to move your paddle (at the bottom of your screen). On the Mac, drag anywhere in the field — paddle follows your cursor's x. Your opponent appears at the top of your screen.
+6. First to 7 wins. The score resets when a new session starts.
 
-Both peers stream their position at ~30 Hz over a single bi-directional iroh stream. The wire format is an 8-byte frame containing two little-endian `Float32`s (x, y) in `[-1, 1]`.
+### Wire format
+
+Each peer streams over a single bi-directional stream at ~60 Hz with two tagged frame types:
+
+| Tag | Frame | Size | Sender |
+|---|---|---|---|
+| `0` | Paddle: `f32 x` | 5 B | both peers |
+| `1` | Ball: `f32 x, f32 y, f32 vx, f32 vy, u16 myScore, u16 theirScore` | 21 B | authority only |
+
+All coordinates are in `[-1, 1]`. Each peer is rendered on the bottom of its own screen, so the y axis is flipped on receive (the x axis is shared). Velocity is included in the ball frame so the non-authority can extrapolate between snapshots; the authority lead-compensates the opponent paddle position (via a smoothed velocity estimate) when checking collisions, to offset network latency.
+
+ALPN: `iroh-helloiroh-pong/0`.
+
+### Settings
+
+The gear button in the header opens a modal Settings sheet with an entry for an iroh services API key (stored in UserDefaults). A default key is bundled in source, so telemetry comes up automatically on a fresh install; paste your own secret to override it, or tap Clear to revert.
 
 ## Project layout
 
@@ -71,13 +87,16 @@ Both peers stream their position at ~30 Hz over a single bi-directional iroh str
 HelloIroh/
 ├── HelloIroh/
 │   ├── HelloIrohApp.swift     entry point
-│   ├── ContentView.swift      assembles the UI
+│   ├── ContentView.swift      assembles the UI, owns the Settings sheet
+│   ├── SettingsView.swift     API key entry + telemetry status
 │   ├── IdentityStore.swift    persists the secret key in UserDefaults
-│   ├── IrohPeer.swift         binds the Endpoint, runs the accept loop
-│   ├── PeerSession.swift      one bi-stream's send/recv tasks
-│   ├── MotionSource.swift     iOS gravity / macOS drag
-│   ├── BallScene.swift        canvas rendering
-│   ├── WireFormat.swift       ALPN + 8-byte frame encode/decode
+│   ├── IrohPeer.swift         binds the Endpoint, runs the accept loop,
+│   │                          owns PongGame and decides ball authority
+│   ├── PeerSession.swift      tagged frame send/recv on one bi-stream
+│   ├── PongGame.swift         paddles, ball, scores, physics, prediction
+│   ├── PongScene.swift        SwiftUI rendering of field + paddles + ball
+│   ├── MotionSource.swift     iOS gravity / macOS drag → 1D paddle x
+│   ├── WireFormat.swift       ALPN + tagged frame encode/decode
 │   └── HelloIroh.entitlements network sandbox entitlements (macOS)
 └── HelloIroh.xcodeproj
 ```
