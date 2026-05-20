@@ -55,6 +55,14 @@ android {
             isMinifyEnabled = false
         }
     }
+
+    // iroh-ffi's generated bindings call java.lang.ref.Cleaner at runtime
+    // behind a Class.forName guard, but Lint doesn't understand the guard
+    // and flags it as a NewApi violation. Baseline captures the known
+    // false-positives; any new issue would still fail the build.
+    lint {
+        baseline = file("lint-baseline.xml")
+    }
 }
 
 dependencies {
@@ -79,4 +87,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
+
+    testImplementation("junit:junit:4.13.2")
 }
