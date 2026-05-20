@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -31,6 +32,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import computer.iroh.pong.MainViewModel
+import computer.iroh.pong.game.PongColors
+import computer.iroh.pong.game.PongScene
 import computer.iroh.pong.net.IrohPeer
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,35 +50,33 @@ fun EndpointScreen(viewModel: MainViewModel) {
         Column(
             modifier = Modifier
                 .padding(padding)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
                 .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("Your endpoint id", style = MaterialTheme.typography.labelLarge)
+            Text("Your endpoint id", style = MaterialTheme.typography.labelSmall)
             val id = endpointId
-            if (id == null) {
-                Text("Binding…")
-            } else {
-                SelectionContainer {
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                SelectionContainer(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = id,
+                        text = id ?: "Binding…",
                         fontFamily = FontFamily.Monospace,
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
+                        maxLines = 2,
                     )
                 }
-                Button(onClick = { copyToClipboard(context, id) }) {
-                    Text("Copy")
+                if (id != null) {
+                    Button(onClick = { copyToClipboard(context, id) }) { Text("Copy") }
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
-            Text("Peer endpoint id", style = MaterialTheme.typography.labelLarge)
             OutlinedTextField(
                 value = peerIdInput,
                 onValueChange = { peerIdInput = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Paste a peer's id") },
+                placeholder = { Text("Peer endpoint id") },
                 singleLine = true,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -85,9 +86,28 @@ fun EndpointScreen(viewModel: MainViewModel) {
                 ) {
                     Text("Connect")
                 }
+                Text(
+                    text = stateLabel(state),
+                    color = stateColor(state),
+                    modifier = Modifier.align(androidx.compose.ui.Alignment.CenterVertically),
+                )
             }
 
-            Text(text = stateLabel(state), color = stateColor(state))
+            val myColor = PongColors.forEndpointId(id ?: "")
+            val opponentColor = PongColors.forEndpointId(
+                when (val s = state) {
+                    is IrohPeer.State.Connected -> s.peerShortId
+                    else -> peerIdInput
+                },
+            )
+
+            PongScene(
+                game = viewModel.peer.game,
+                myColor = myColor,
+                opponentColor = opponentColor,
+                onDrag = viewModel.motion::setFromDrag,
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+            )
         }
     }
 }
@@ -95,7 +115,7 @@ fun EndpointScreen(viewModel: MainViewModel) {
 @Composable
 private fun stateColor(state: IrohPeer.State) = when (state) {
     is IrohPeer.State.Error -> MaterialTheme.colorScheme.error
-    else -> MaterialTheme.colorScheme.onSurface
+    else -> MaterialTheme.colorScheme.onSurfaceVariant
 }
 
 private fun stateLabel(state: IrohPeer.State): String = when (state) {

@@ -1,11 +1,14 @@
 package computer.iroh.pong.net
 
 import android.util.Log
+import computer.iroh.BiStream
 import computer.iroh.Endpoint
 import computer.iroh.EndpointAddr
 import computer.iroh.EndpointId
 import computer.iroh.EndpointOptions
 import computer.iroh.presetN0
+import computer.iroh.pong.game.MotionSource
+import computer.iroh.pong.game.PongGame
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
@@ -17,8 +20,10 @@ import kotlinx.coroutines.launch
 
 private const val TAG = "IrohPeer"
 
-class IrohPeer(private val scope: CoroutineScope) {
-
+class IrohPeer(
+    private val scope: CoroutineScope,
+    private val motion: MotionSource,
+) {
     sealed interface State {
         data object Idle : State
         data object Binding : State
@@ -27,6 +32,8 @@ class IrohPeer(private val scope: CoroutineScope) {
         data class Connected(val peerShortId: String) : State
         data class Error(val message: String) : State
     }
+
+    val game = PongGame()
 
     private val _state = MutableStateFlow<State>(State.Idle)
     val state: StateFlow<State> = _state.asStateFlow()
@@ -103,16 +110,16 @@ class IrohPeer(private val scope: CoroutineScope) {
         }
     }
 
-    private fun adoptSession(bi: computer.iroh.BiStream, remoteIdHex: String, asAuthority: Boolean) {
+    private fun adoptSession(bi: BiStream, remoteIdHex: String, asAuthority: Boolean) {
         session?.stop()
-        // Stage 2: emit a fixed paddle frame at every tick; ignore ball production
-        // until Stage 3a wires in PongGame.
-        val fixedPaddle = WireFormat.encodePaddle(0f)
+        game.resetForNewSession(asAuthority)
+        val g = game
+        val m = motion
         val s = PeerSession(
             bi = bi,
-            produceFrames = { Pair(fixedPaddle, null) },
-            onPaddleReceived = { x -> Log.d(TAG, "paddle x=$x") },
-            onBallReceived = { p -> Log.d(TAG, "ball=$p") },
+            produceFrames = { g.produceTickFrames(m.paddleX) },
+            onPaddleReceived = { x -> g.receivedOpponentPaddle(x) },
+            onBallReceived = { p -> g.receivedBall(p) },
             onClosed = ::handleSessionClosed,
         )
         session = s
@@ -123,9 +130,9 @@ class IrohPeer(private val scope: CoroutineScope) {
     }
 
     private fun handleSessionClosed() {
-        session ?: return
+        if (session == null) return
         session = null
+        game.sessionEnded()
         if (_state.value is State.Connected) _state.value = State.Ready
     }
 }
-
