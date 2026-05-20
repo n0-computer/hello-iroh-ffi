@@ -1,14 +1,18 @@
 package computer.iroh.pong.net
 
+import android.os.Build
 import android.util.Log
 import computer.iroh.BiStream
 import computer.iroh.Endpoint
 import computer.iroh.EndpointAddr
 import computer.iroh.EndpointId
 import computer.iroh.EndpointOptions
+import computer.iroh.ServicesClient
+import computer.iroh.ServicesOptions
 import computer.iroh.presetN0
 import computer.iroh.pong.game.MotionSource
 import computer.iroh.pong.game.PongGame
+import computer.iroh.pong.identity.IdentityStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
@@ -23,6 +27,7 @@ private const val TAG = "IrohPeer"
 class IrohPeer(
     private val scope: CoroutineScope,
     private val motion: MotionSource,
+    private val identity: IdentityStore,
 ) {
     sealed interface State {
         data object Idle : State
@@ -33,17 +38,33 @@ class IrohPeer(
         data class Error(val message: String) : State
     }
 
+    sealed interface TelemetryState {
+        data object Off : TelemetryState
+        data object Starting : TelemetryState
+        data class Active(val name: String) : TelemetryState
+        data class Error(val message: String) : TelemetryState
+    }
+
     val game = PongGame()
 
     private val _state = MutableStateFlow<State>(State.Idle)
     val state: StateFlow<State> = _state.asStateFlow()
 
-    private val _endpointId = MutableStateFlow<String?>(null)
-    val endpointId: StateFlow<String?> = _endpointId.asStateFlow()
+    private val _endpointId = MutableStateFlow(identity.endpointId)
+    val endpointId: StateFlow<String> = _endpointId.asStateFlow()
+
+    private val _telemetry = MutableStateFlow<TelemetryState>(TelemetryState.Off)
+    val telemetry: StateFlow<TelemetryState> = _telemetry.asStateFlow()
+
+    private val _apiSecret = MutableStateFlow(identity.apiSecret)
+    val apiSecret: StateFlow<String> = _apiSecret.asStateFlow()
+
+    val isUsingDefaultApiSecret: Boolean get() = _apiSecret.value.isEmpty()
 
     private var endpoint: Endpoint? = null
     private var acceptJob: Job? = null
     private var session: PeerSession? = null
+    private var services: ServicesClient? = null
 
     fun start() {
         if (endpoint != null) return
@@ -53,13 +74,14 @@ class IrohPeer(
                 val ep = Endpoint.bind(
                     EndpointOptions(
                         preset = presetN0(),
+                        secretKey = identity.secretKey.toBytes(),
                         alpns = listOf(WireFormat.ALPN),
                     ),
                 )
                 endpoint = ep
-                _endpointId.value = ep.id().toString()
                 _state.value = State.Ready
                 acceptJob = scope.launch { runAcceptLoop(ep) }
+                startServicesClient()
             } catch (t: Throwable) {
                 _state.value = State.Error("bind failed: ${t.message ?: t}")
             }
@@ -86,6 +108,37 @@ class IrohPeer(
                 _state.value = State.Error("connect failed: ${t.message ?: t}")
             }
         }
+    }
+
+    fun saveApiSecret(secret: String) {
+        val trimmed = secret.trim()
+        identity.apiSecret = trimmed
+        _apiSecret.value = trimmed
+        scope.launch { startServicesClient() }
+    }
+
+    private suspend fun startServicesClient() {
+        services = null
+        val ep = endpoint ?: return
+        val secret = _apiSecret.value.ifEmpty { DEFAULT_API_SECRET }
+        val name = deviceName()
+        _telemetry.value = TelemetryState.Starting
+        try {
+            val client = ServicesClient.create(
+                ep,
+                ServicesOptions(apiSecret = secret, name = name),
+            )
+            services = client
+            _telemetry.value = TelemetryState.Active(name)
+        } catch (t: Throwable) {
+            _telemetry.value = TelemetryState.Error("${t.message ?: t}")
+        }
+    }
+
+    private fun deviceName(): String {
+        val short = _endpointId.value.take(8)
+        val model = Build.MODEL.lowercase().replace(" ", "-")
+        return "android-$model-$short"
     }
 
     private suspend fun runAcceptLoop(ep: Endpoint) {
@@ -134,5 +187,9 @@ class IrohPeer(
         session = null
         game.sessionEnded()
         if (_state.value is State.Connected) _state.value = State.Ready
+    }
+
+    companion object {
+        const val DEFAULT_API_SECRET = "servicesaaqg6nnf7kr3uiacviqgbxeqconvhuz4ldr5dem4gqhsp3cyat6qxexoctwjsi7m6dh2t2qvfu2yhdoaav6eibaj4aaavhonlixbohceu4aa"
     }
 }

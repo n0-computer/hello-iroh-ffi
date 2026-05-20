@@ -6,7 +6,7 @@ Wire-compatible with the Swift app in [../swift](../swift) — an Android peer c
 
 ## Status
 
-Stage 1 of three: scaffolds the Compose app, binds an iroh `Endpoint`, and shows the endpoint id. No gameplay yet. See `../plans/kotlin-android.md` for the staged plan.
+All three stages are in source: scaffold + endpoint, peer accept/connect with the shared wire format, full Pong with tilt input (touch-drag fallback for the emulator), settings sheet with iroh-services telemetry. Pending a clean Android Studio build against an installed NDK before we can confirm it runs.
 
 ## Prerequisites
 
@@ -48,7 +48,20 @@ Open `kotlin-android/` in Android Studio and let it finish the initial Gradle sy
 
 Or use *Run → Run 'app'* in Android Studio.
 
-The app launches into a single screen that shows your iroh endpoint id with a Copy button. The endpoint is bound fresh on every launch (persistent identity comes in stage 3).
+The app launches into a single screen: your endpoint id at the top with a Copy button and a gear (Settings), a text field for the peer's endpoint id with a Connect button, and the Pong field underneath. The endpoint id is persisted across launches, so the copy/paste happens once.
+
+## Play the demo
+
+1. Build and run on a phone (or two — or one phone and the Swift app on a Mac/iPhone).
+2. On device A, tap **Copy** and send the id to device B.
+3. On device B, paste into the **Peer endpoint id** field and tap **Connect**.
+4. The peer that tapped Connect is the **ball authority** — it simulates ball physics and streams ball state.
+5. Tilt the phone left/right to move your paddle. In the emulator, where there is no gravity sensor, drag horizontally on the playfield instead.
+6. First to 7 wins. The score resets when a new session starts.
+
+### Settings
+
+The gear button opens a modal sheet with an entry for an iroh services API key (stored in SharedPreferences). A default key is bundled in source so telemetry comes up automatically on a fresh install; paste your own secret to override, or tap Clear to revert.
 
 ## Project layout
 
@@ -63,9 +76,20 @@ kotlin-android/
         ├── AndroidManifest.xml      INTERNET + sensor declaration, portrait
         ├── java/computer/iroh/pong/
         │   ├── MainActivity.kt      Compose host
-        │   ├── MainViewModel.kt     binds the Endpoint, exposes state
+        │   ├── MainViewModel.kt     ties identity, motion, and peer together
+        │   ├── identity/
+        │   │   └── IdentityStore.kt persistent SecretKey + API secret
+        │   ├── net/
+        │   │   ├── IrohPeer.kt      bind, accept loop, connect, services client
+        │   │   ├── PeerSession.kt   tagged frame send/recv on one bi-stream
+        │   │   └── WireFormat.kt    ALPN + tag/byte layout, matches Swift
+        │   ├── game/
+        │   │   ├── PongGame.kt      paddles, ball, scores, physics, prediction
+        │   │   ├── PongScene.kt     Compose Canvas rendering + drag input
+        │   │   └── MotionSource.kt  gravity sensor + drag fallback
         │   └── ui/
         │       ├── EndpointScreen.kt
+        │       ├── SettingsBottomSheet.kt
         │       └── theme/Theme.kt
         └── res/                     icons, strings, themes
 ```

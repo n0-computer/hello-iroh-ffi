@@ -5,7 +5,7 @@ Two-player Pong over [iroh](https://github.com/n0-computer/iroh), implemented in
 | Platform | Language | Status | Details |
 |---|---|---|---|
 | iOS + macOS | Swift / SwiftUI | working | [swift/README.md](swift/README.md) |
-| Android | Kotlin / Jetpack Compose | not started | [kotlin-android/README.md](kotlin-android/README.md) |
+| Android | Kotlin / Jetpack Compose | source in, build verification pending | [kotlin-android/README.md](kotlin-android/README.md) |
 
 Both implementations use [iroh-ffi](https://github.com/n0-computer/iroh-ffi) for the iroh bindings.
 
@@ -34,7 +34,7 @@ ALPN: `iroh-helloiroh-pong/0`.
 iroh-pong/
 ├── README.md
 ├── swift/              iOS + macOS app (Swift / SwiftUI)
-└── kotlin-android/     Android app (Kotlin / Jetpack Compose) — not started
+└── kotlin-android/     Android app (Kotlin / Jetpack Compose)
 ```
 
 ## Further reading

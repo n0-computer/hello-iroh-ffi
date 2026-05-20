@@ -4,12 +4,14 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import computer.iroh.pong.game.MotionSource
+import computer.iroh.pong.identity.IdentityStore
 import computer.iroh.pong.net.IrohPeer
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     val motion = MotionSource(app)
-    val peer = IrohPeer(viewModelScope, motion)
+    private val identity = IdentityStore.loadOrCreate(app)
+    val peer = IrohPeer(viewModelScope, motion, identity)
 
     init {
         motion.start()

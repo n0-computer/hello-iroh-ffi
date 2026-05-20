@@ -11,11 +11,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -26,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
@@ -43,9 +47,19 @@ fun EndpointScreen(viewModel: MainViewModel) {
     val endpointId by viewModel.peer.endpointId.collectAsState()
     val context = LocalContext.current
     var peerIdInput by remember { mutableStateOf("") }
+    var settingsOpen by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = { CenterAlignedTopAppBar(title = { Text("iroh-pong") }) },
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("iroh-pong") },
+                actions = {
+                    IconButton(onClick = { settingsOpen = true }) {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    }
+                },
+            )
+        },
     ) { padding ->
         Column(
             modifier = Modifier
@@ -55,19 +69,20 @@ fun EndpointScreen(viewModel: MainViewModel) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text("Your endpoint id", style = MaterialTheme.typography.labelSmall)
-            val id = endpointId
-            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                SelectionContainer(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                SelectionContainer(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp),
+                ) {
                     Text(
-                        text = id ?: "Binding…",
+                        text = endpointId,
                         fontFamily = FontFamily.Monospace,
                         fontSize = 11.sp,
                         maxLines = 2,
                     )
                 }
-                if (id != null) {
-                    Button(onClick = { copyToClipboard(context, id) }) { Text("Copy") }
-                }
+                Button(onClick = { copyToClipboard(context, endpointId) }) { Text("Copy") }
             }
 
             Spacer(modifier = Modifier.height(2.dp))
@@ -89,11 +104,11 @@ fun EndpointScreen(viewModel: MainViewModel) {
                 Text(
                     text = stateLabel(state),
                     color = stateColor(state),
-                    modifier = Modifier.align(androidx.compose.ui.Alignment.CenterVertically),
+                    modifier = Modifier.align(Alignment.CenterVertically),
                 )
             }
 
-            val myColor = PongColors.forEndpointId(id ?: "")
+            val myColor = PongColors.forEndpointId(endpointId)
             val opponentColor = PongColors.forEndpointId(
                 when (val s = state) {
                     is IrohPeer.State.Connected -> s.peerShortId
@@ -106,7 +121,16 @@ fun EndpointScreen(viewModel: MainViewModel) {
                 myColor = myColor,
                 opponentColor = opponentColor,
                 onDrag = viewModel.motion::setFromDrag,
-                modifier = Modifier.weight(1f).fillMaxWidth(),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+            )
+        }
+
+        if (settingsOpen) {
+            SettingsBottomSheet(
+                peer = viewModel.peer,
+                onDismiss = { settingsOpen = false },
             )
         }
     }
