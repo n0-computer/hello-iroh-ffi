@@ -168,12 +168,15 @@ class IrohPeer(
         game.resetForNewSession(asAuthority)
         val g = game
         val m = motion
-        val s = PeerSession(
+        lateinit var s: PeerSession
+        s = PeerSession(
             bi = bi,
             produceFrames = { g.produceTickFrames(m.paddleX) },
             onPaddleReceived = { x -> g.receivedOpponentPaddle(x) },
             onBallReceived = { p -> g.receivedBall(p) },
-            onClosed = ::handleSessionClosed,
+            // Capture the session identity in the closure so a late-firing
+            // onClosed from a previous session can't tear down the current one.
+            onClosed = { if (session === s) handleSessionClosed() },
         )
         session = s
         s.start(scope)
@@ -183,7 +186,6 @@ class IrohPeer(
     }
 
     private fun handleSessionClosed() {
-        if (session == null) return
         session = null
         game.sessionEnded()
         if (_state.value is State.Connected) _state.value = State.Ready
