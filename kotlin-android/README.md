@@ -6,7 +6,7 @@ Wire-compatible with the Swift app in [../swift](../swift) — an Android peer c
 
 ## Status
 
-All three stages are in source: scaffold + endpoint, peer accept/connect with the shared wire format, full Pong with tilt input (touch-drag fallback for the emulator), settings sheet with iroh-services telemetry. Pending a clean Android Studio build against an installed NDK before we can confirm it runs.
+Builds clean against NDK r30 + iroh-ffi `feat-1-0`. Produces a ~62 MB debug APK with `libiroh_ffi.so` for all four ABIs (`armeabi-v7a`, `arm64-v8a`, `x86`, `x86_64`). Pending wall-clock runtime verification on a real Android device.
 
 ## Prerequisites
 
