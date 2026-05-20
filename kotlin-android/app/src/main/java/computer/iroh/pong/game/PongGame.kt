@@ -1,6 +1,7 @@
 package computer.iroh.pong.game
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import computer.iroh.pong.net.WireFormat
@@ -23,9 +24,9 @@ data class Vec2(val x: Float, val y: Float) {
 class PongGame {
     var isAuthority: Boolean by mutableStateOf(false)
         private set
-    var myPaddleX: Float by mutableStateOf(0f)
+    var myPaddleX: Float by mutableFloatStateOf(0f)
         private set
-    var opponentPaddleX: Float by mutableStateOf(0f)
+    var opponentPaddleX: Float by mutableFloatStateOf(0f)
         private set
     var ballPos: Vec2 by mutableStateOf(Vec2.ZERO)
         private set

@@ -6,7 +6,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.setValue
 import kotlin.math.max
 import kotlin.math.min
@@ -18,7 +18,7 @@ import kotlin.math.min
  */
 class MotionSource(context: Context) : SensorEventListener {
 
-    var paddleX: Float by mutableStateOf(0f)
+    var paddleX: Float by mutableFloatStateOf(0f)
         private set
 
     private val sensorManager =
