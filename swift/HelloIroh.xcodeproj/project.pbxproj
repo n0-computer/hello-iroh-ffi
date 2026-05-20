@@ -205,7 +205,7 @@
 			mainGroup = 9FCDCAA12FB767D100FD70BF;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				9FCDCBF02FB77ABB00FD70BF /* XCLocalSwiftPackageReference "../../iroh-ffi" */,
+				9FCDCBF02FB77ABB00FD70BF /* XCRemoteSwiftPackageReference "iroh-ffi" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9FCDCAAB2FB767D100FD70BF /* Products */;
@@ -618,20 +618,26 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		9FCDCBF02FB77ABB00FD70BF /* XCLocalSwiftPackageReference "../../iroh-ffi" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = "../../iroh-ffi";
+/* Begin XCRemoteSwiftPackageReference section */
+		9FCDCBF02FB77ABB00FD70BF /* XCRemoteSwiftPackageReference "iroh-ffi" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/n0-computer/iroh-ffi";
+			requirement = {
+				branch = "feat-1-0";
+				kind = branch;
+			};
 		};
-/* End XCLocalSwiftPackageReference section */
+/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		9FCDCB0D2FB7700000FD70BF /* IrohLib */ = {
 			isa = XCSwiftPackageProductDependency;
+			package = 9FCDCBF02FB77ABB00FD70BF /* XCRemoteSwiftPackageReference "iroh-ffi" */;
 			productName = IrohLib;
 		};
 		9FCDCBF12FB77ABB00FD70BF /* IrohLib */ = {
 			isa = XCSwiftPackageProductDependency;
+			package = 9FCDCBF02FB77ABB00FD70BF /* XCRemoteSwiftPackageReference "iroh-ffi" */;
 			productName = IrohLib;
 		};
 /* End XCSwiftPackageProductDependency section */

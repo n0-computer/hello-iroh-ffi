@@ -1,6 +1,6 @@
-# HelloIroh
+# iroh-pong — Swift (iOS + macOS)
 
-A small iOS + macOS demo built on [iroh](https://github.com/n0-computer/iroh) via the [iroh-ffi](https://github.com/n0-computer/iroh-ffi) Swift bindings.
+A small iOS + macOS Pong demo built on [iroh](https://github.com/n0-computer/iroh) via the [iroh-ffi](https://github.com/n0-computer/iroh-ffi) Swift bindings.
 
 Two peers connect over an iroh bi-directional stream and play a round of Pong. Paddles move with device tilt on iOS (CoreMotion gravity) or a mouse drag on macOS. Discovery is manual: copy your endpoint id, paste it on the other peer, tap Connect.
 
@@ -9,45 +9,13 @@ The endpoint id is persisted across launches, so the copy/paste happens once and
 ## Prerequisites
 
 - macOS with [Xcode](https://developer.apple.com/xcode/) 16 or newer
-- [Rust](https://www.rust-lang.org/tools/install) with [`cargo-make`](https://crates.io/crates/cargo-make): `cargo install cargo-make`
 - A free Apple Developer account if you want to run on a physical iPhone
 
-> While iroh-ffi is still on a 1.0 release candidate, the published Swift binary may not match the latest source. The setup below builds the xcframework locally to guarantee they line up. Once iroh-ffi ships a stable release, the `cargo make` step becomes optional — Xcode can just resolve the Swift Package from GitHub.
-
-## Setup
-
-This project expects `iroh-ffi` checked out as a sibling of `helloiroh`:
-
-```
-parent-dir/
-├── helloiroh/
-│   └── HelloIroh/      ← this repo
-└── iroh-ffi/
-```
-
-Clone iroh-ffi and install the Apple Rust targets:
-
-```bash
-git clone https://github.com/n0-computer/iroh-ffi
-cd iroh-ffi
-rustup target add \
-  aarch64-apple-ios \
-  aarch64-apple-ios-sim \
-  x86_64-apple-ios \
-  aarch64-apple-darwin
-```
-
-Build the xcframework (first build takes 5–15 minutes; later builds reuse cargo's cache):
-
-```bash
-cargo make swift-xcframework
-```
-
-This produces `iroh-ffi/IrohLib/artifacts/Iroh.xcframework`, which the Xcode project consumes as a local Swift Package.
+The Xcode project pulls iroh-ffi as a remote Swift Package from the `feat-1-0` branch of [n0-computer/iroh-ffi](https://github.com/n0-computer/iroh-ffi). Xcode resolves it automatically on first open — no local checkout or `cargo make` step required.
 
 ## Build and run
 
-Open `HelloIroh.xcodeproj` in Xcode. The project has a single multiplatform SwiftUI target.
+Open `HelloIroh.xcodeproj` in Xcode and let it finish resolving the Swift Package on first launch. The project has a single multiplatform SwiftUI target.
 
 - **macOS**: select **My Mac** and Run.
 - **iOS Simulator**: pick any iPhone simulator destination and Run.
@@ -84,7 +52,7 @@ The gear button in the header opens a modal Settings sheet with an entry for an 
 ## Project layout
 
 ```
-HelloIroh/
+swift/
 ├── HelloIroh/
 │   ├── HelloIrohApp.swift     entry point
 │   ├── ContentView.swift      assembles the UI, owns the Settings sheet
