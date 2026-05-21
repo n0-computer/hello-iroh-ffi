@@ -8,7 +8,7 @@ Wire-compatible with the Swift app in [../swift](../swift) — an Android peer c
 
 Working end-to-end on a headless Android 14 arm64 emulator: bind an Endpoint, load persistent identity, activate iroh-services telemetry, render the Pong field. Cross-platform play against the Swift app should follow from the shared wire format.
 
-Requires a small patch to iroh-ffi to expose an Android JNI initialization hook so iroh's DNS resolver can read system DNS via `LinkProperties`. The app calls `IrohAndroid.installAndroidContext(applicationContext)` once at startup — see `MainViewModel.kt`. Until the upstream PR lands, use a local checkout of iroh-ffi `feat-1-0` with the patch applied (the `Java_computer_iroh_IrohAndroid_installAndroidContext` extern in `iroh-ffi/src/android_init.rs` plus the matching `IrohAndroid.kt` in `iroh-ffi/kotlin/lib/`).
+Requires iroh-ffi's [`feat-1-0-android-context`](https://github.com/n0-computer/iroh-ffi/tree/feat-1-0-android-context) branch, which adds an Android JNI initialization hook so iroh's DNS resolver can read system DNS via `LinkProperties`. The app calls `IrohAndroid.installAndroidContext(applicationContext)` once at startup — see `MainViewModel.kt`. When that branch lands on `feat-1-0` (or in a published Maven artifact), this requirement goes away.
 
 ## Prerequisites
 
@@ -21,13 +21,17 @@ Requires a small patch to iroh-ffi to expose an Android JNI initialization hook 
 
 ## Setup
 
-This project expects [`iroh-ffi`](https://github.com/n0-computer/iroh-ffi) checked out as a sibling of `iroh-pong` on the `feat-1-0` branch:
+This project expects [`iroh-ffi`](https://github.com/n0-computer/iroh-ffi) checked out as a sibling of `iroh-pong` on the `feat-1-0-android-context` branch:
 
 ```
 parent-dir/
 ├── iroh-pong/
 │   └── kotlin-android/    ← this directory
-└── iroh-ffi/              ← on branch feat-1-0
+└── iroh-ffi/              ← on branch feat-1-0-android-context
+```
+
+```bash
+git clone --branch feat-1-0-android-context https://github.com/n0-computer/iroh-ffi.git
 ```
 
 Until iroh-ffi publishes an Android-friendly Maven artifact, this project pulls its generated Kotlin sources and per-ABI `.so` files directly out of the sibling checkout via Gradle source-set inclusion. The `.so` files are produced by a one-time build:
