@@ -3,6 +3,7 @@ package computer.iroh.pong.ui
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -69,20 +70,20 @@ fun EndpointScreen(viewModel: MainViewModel) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text("Your endpoint id", style = MaterialTheme.typography.labelSmall)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                SelectionContainer(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 8.dp),
-                ) {
-                    Text(
-                        text = endpointId,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 11.sp,
-                        maxLines = 2,
-                    )
-                }
-                Button(onClick = { copyToClipboard(context, endpointId) }) { Text("Copy") }
+            SelectionContainer(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = endpointId,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 11.sp,
+                    maxLines = 2,
+                )
+            }
+            Button(
+                onClick = { copyToClipboard(context, endpointId) },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = endpointId.isNotBlank(),
+            ) {
+                Text("Copy endpoint id")
             }
 
             Spacer(modifier = Modifier.height(2.dp))
@@ -154,4 +155,5 @@ private fun stateLabel(state: IrohPeer.State): String = when (state) {
 private fun copyToClipboard(context: Context, text: String) {
     val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     cm.setPrimaryClip(ClipData.newPlainText("endpoint id", text))
+    Toast.makeText(context, "Endpoint id copied", Toast.LENGTH_SHORT).show()
 }
