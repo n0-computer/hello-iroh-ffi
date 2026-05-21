@@ -9,9 +9,34 @@ The endpoint id is persisted across launches, so the copy/paste happens once and
 ## Prerequisites
 
 - macOS with [Xcode](https://developer.apple.com/xcode/) 16 or newer
+- [Rust](https://www.rust-lang.org/tools/install) with [`cargo-make`](https://crates.io/crates/cargo-make): `cargo install cargo-make`
 - A free Apple Developer account if you want to run on a physical iPhone
 
-The Xcode project pulls iroh-ffi as a remote Swift Package from the `feat-1-0` branch of [n0-computer/iroh-ffi](https://github.com/n0-computer/iroh-ffi). Xcode resolves it automatically on first open — no local checkout or `cargo make` step required.
+The Xcode project consumes iroh-ffi as a **local** Swift Package at `../../iroh-ffi`. Until iroh-ffi tags a `1.0.0-rc` release whose pre-built xcframework matches the `feat-1-0` source, the project needs a sibling checkout so SPM can use the locally-built xcframework instead of falling through to the stale `v0.20.0` release zip.
+
+## Setup
+
+Clone iroh-ffi as a sibling of `iroh-pong` on the `feat-1-0` branch, install the Apple Rust targets, and build the xcframework:
+
+```
+parent-dir/
+├── iroh-pong/
+│   └── swift/             ← this directory
+└── iroh-ffi/              ← on branch feat-1-0
+```
+
+```bash
+git clone --branch feat-1-0 https://github.com/n0-computer/iroh-ffi
+cd iroh-ffi
+rustup target add \
+  aarch64-apple-ios \
+  aarch64-apple-ios-sim \
+  x86_64-apple-ios \
+  aarch64-apple-darwin
+cargo make swift-xcframework
+```
+
+First build takes 5–15 minutes; subsequent builds reuse cargo's cache. The output goes into `iroh-ffi/IrohLib/artifacts/Iroh.xcframework`, which the Xcode project consumes via the local Swift Package.
 
 ## Build and run
 
