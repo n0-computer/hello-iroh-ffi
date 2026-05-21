@@ -6,7 +6,9 @@ Wire-compatible with the Swift app in [../swift](../swift) — an Android peer c
 
 ## Status
 
-Builds clean against NDK r30 + iroh-ffi `feat-1-0`. Produces a ~62 MB debug APK with `libiroh_ffi.so` for all four ABIs (`armeabi-v7a`, `arm64-v8a`, `x86`, `x86_64`). Pending wall-clock runtime verification on a real Android device.
+Working end-to-end on a headless Android 14 arm64 emulator: bind an Endpoint, load persistent identity, activate iroh-services telemetry, render the Pong field. Cross-platform play against the Swift app should follow from the shared wire format.
+
+Requires a small patch to iroh-ffi to expose an Android JNI initialization hook so iroh's DNS resolver can read system DNS via `LinkProperties`. The app calls `IrohAndroid.installAndroidContext(applicationContext)` once at startup — see `MainViewModel.kt`. Until the upstream PR lands, use a local checkout of iroh-ffi `feat-1-0` with the patch applied (the `Java_computer_iroh_IrohAndroid_installAndroidContext` extern in `iroh-ffi/src/android_init.rs` plus the matching `IrohAndroid.kt` in `iroh-ffi/kotlin/lib/`).
 
 ## Prerequisites
 
