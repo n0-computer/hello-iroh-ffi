@@ -1,4 +1,4 @@
-package computer.iroh.pong.ui.theme
+package computer.iroh.dot.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -27,7 +27,7 @@ private val DarkColors = darkColorScheme(
 )
 
 @Composable
-fun IrohPongTheme(
+fun IrohDotTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {

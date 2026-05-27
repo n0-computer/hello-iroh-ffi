@@ -1,4 +1,4 @@
-package computer.iroh.pong.ui
+package computer.iroh.dot.ui
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -36,10 +36,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import computer.iroh.pong.MainViewModel
-import computer.iroh.pong.game.PongColors
-import computer.iroh.pong.game.PongScene
-import computer.iroh.pong.net.IrohPeer
+import computer.iroh.dot.MainViewModel
+import computer.iroh.dot.game.DotColors
+import computer.iroh.dot.game.DotScene
+import computer.iroh.dot.net.IrohPeer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,7 +53,7 @@ fun EndpointScreen(viewModel: MainViewModel) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("iroh-pong") },
+                title = { Text("iroh-dot") },
                 actions = {
                     IconButton(onClick = { settingsOpen = true }) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings")
@@ -109,15 +109,15 @@ fun EndpointScreen(viewModel: MainViewModel) {
                 )
             }
 
-            val myColor = PongColors.forEndpointId(endpointId)
-            val opponentColor = PongColors.forEndpointId(
+            val myColor = DotColors.forEndpointId(endpointId)
+            val opponentColor = DotColors.forEndpointId(
                 when (val s = state) {
                     is IrohPeer.State.Connected -> s.peerShortId
                     else -> peerIdInput
                 },
             )
 
-            PongScene(
+            DotScene(
                 game = viewModel.peer.game,
                 myColor = myColor,
                 opponentColor = opponentColor,

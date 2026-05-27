@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "computer.iroh.pong"
+    namespace = "computer.iroh.dot"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "computer.iroh.pong"
+        applicationId = "computer.iroh.dot"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

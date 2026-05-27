@@ -1,4 +1,4 @@
-package computer.iroh.pong
+package computer.iroh.dot
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry

@@ -1,12 +1,12 @@
-# iroh-pong — Kotlin (Android)
+# iroh-dot — Kotlin (Android)
 
-Android version of the iroh-pong demo. Two peers connect over an iroh bi-directional stream and play a round of Pong. Compose UI, Kotlin coroutines, and the [iroh-ffi](https://github.com/n0-computer/iroh-ffi) Kotlin bindings.
+Android version of the iroh-dot demo. Two peers connect over an iroh bi-directional stream, and each controls one dot in a shared coordinate space. Compose UI, Kotlin coroutines, and the [iroh-ffi](https://github.com/n0-computer/iroh-ffi) Kotlin bindings.
 
-Wire-compatible with the Swift app in [../swift](../swift) — an Android peer can play against an iPhone or a Mac.
+Wire-compatible with the Swift app in [../swift](../swift): an Android peer shares a screen with an iPhone or a Mac.
 
 ## Status
 
-Working end-to-end on a headless Android 14 arm64 emulator: bind an Endpoint, load persistent identity, activate iroh-services telemetry, render the Pong field. Cross-platform play against the Swift app should follow from the shared wire format.
+Working end-to-end on a headless Android 14 arm64 emulator: bind an Endpoint, load persistent identity, activate iroh-services telemetry, render the dot field. Cross-platform play against the Swift app should follow from the shared wire format.
 
 Requires iroh-ffi's [`feat-1-0-android-context`](https://github.com/n0-computer/iroh-ffi/tree/feat-1-0-android-context) branch, which adds an Android JNI initialization hook so iroh's DNS resolver can read system DNS via `LinkProperties`. The app calls `IrohAndroid.installAndroidContext(applicationContext)` once at startup — see `MainViewModel.kt`. When that branch lands on `feat-1-0` (or in a published Maven artifact), this requirement goes away.
 
@@ -21,11 +21,11 @@ Requires iroh-ffi's [`feat-1-0-android-context`](https://github.com/n0-computer/
 
 ## Setup
 
-This project expects [`iroh-ffi`](https://github.com/n0-computer/iroh-ffi) checked out as a sibling of `iroh-pong` on the `feat-1-0-android-context` branch:
+This project expects [`iroh-ffi`](https://github.com/n0-computer/iroh-ffi) checked out as a sibling of `iroh-dot` on the `feat-1-0-android-context` branch:
 
 ```
 parent-dir/
-├── iroh-pong/
+├── iroh-dot/
 │   └── kotlin-android/    ← this directory
 └── iroh-ffi/              ← on branch feat-1-0-android-context
 ```
@@ -54,16 +54,15 @@ Open `kotlin-android/` in Android Studio and let it finish the initial Gradle sy
 
 Or use *Run → Run 'app'* in Android Studio.
 
-The app launches into a single screen: your endpoint id at the top with a Copy button and a gear (Settings), a text field for the peer's endpoint id with a Connect button, and the Pong field underneath. The endpoint id is persisted across launches, so the copy/paste happens once.
+The app launches into a single screen: your endpoint id at the top with a Copy button and a gear (Settings), a text field for the peer's endpoint id with a Connect button, and the dot field underneath. The endpoint id is persisted across launches, so the copy/paste happens once.
 
 ## Play the demo
 
-1. Build and run on a phone (or two — or one phone and the Swift app on a Mac/iPhone).
+1. Build and run on a phone (or two, or one phone and the Swift app on a Mac/iPhone).
 2. On device A, tap **Copy** and send the id to device B.
 3. On device B, paste into the **Peer endpoint id** field and tap **Connect**.
-4. The peer that tapped Connect is the **ball authority** — it simulates ball physics and streams ball state.
-5. Tilt the phone left/right to move your paddle. In the emulator, where there is no gravity sensor, drag horizontally on the playfield instead.
-6. First to 7 wins. The score resets when a new session starts.
+4. Tilt the phone to move your dot: it rolls toward the lowered edge, like a ball on a tray. In the emulator, where there is no gravity sensor, drag on the field instead.
+5. Both dots appear in the same coordinate space, tinted by endpoint id, so you can watch the peer's dot track yours as either of you moves.
 
 ### Settings
 
@@ -80,18 +79,18 @@ kotlin-android/
     ├── build.gradle.kts             Compose, source-set pull from iroh-ffi
     └── src/main/
         ├── AndroidManifest.xml      INTERNET + sensor declaration, portrait
-        ├── java/computer/iroh/pong/
+        ├── java/computer/iroh/dot/
         │   ├── MainActivity.kt      Compose host
         │   ├── MainViewModel.kt     ties identity, motion, and peer together
         │   ├── identity/
         │   │   └── IdentityStore.kt persistent SecretKey + API secret
         │   ├── net/
         │   │   ├── IrohPeer.kt      bind, accept loop, connect, services client
-        │   │   ├── PeerSession.kt   tagged frame send/recv on one bi-stream
-        │   │   └── WireFormat.kt    ALPN + tag/byte layout, matches Swift
+        │   │   ├── PeerSession.kt   position send/recv on one bi-stream
+        │   │   └── WireFormat.kt    ALPN + position frame layout, matches Swift
         │   ├── game/
-        │   │   ├── PongGame.kt      paddles, ball, scores, physics, prediction
-        │   │   ├── PongScene.kt     Compose Canvas rendering + drag input
+        │   │   ├── DotGame.kt       my dot + peer's dot positions
+        │   │   ├── DotScene.kt      Compose Canvas rendering + drag input
         │   │   └── MotionSource.kt  gravity sensor + drag fallback
         │   └── ui/
         │       ├── EndpointScreen.kt
