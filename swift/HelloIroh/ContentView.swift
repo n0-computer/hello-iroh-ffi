@@ -11,9 +11,9 @@ struct ContentView: View {
             if let peer {
                 header(peer: peer)
                 connectBar(peer: peer)
-                PongScene(
+                DotScene(
                     game: peer.game,
-                    myColor: PongColors.color(forEndpointId: peer.endpointId),
+                    myColor: DotColors.color(forEndpointId: peer.endpointId),
                     opponentColor: peer.opponentColor,
                     onDrag: dragHandler
                 )
@@ -84,9 +84,9 @@ struct ContentView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var dragHandler: ((Float) -> Void)? {
+    private var dragHandler: ((Float, Float) -> Void)? {
         #if os(macOS)
-        return { motion.setFromDrag(x: $0) }
+        return { motion.setFromDrag(x: $0, y: $1) }
         #else
         return nil
         #endif
@@ -104,7 +104,7 @@ struct ContentView: View {
         case .binding: return "binding…"
         case .ready: return "ready — paste a peer id and tap Connect, or wait for an incoming connection"
         case .connecting: return "connecting…"
-        case .connected(let short): return "connected to \(short) — first to 7 wins"
+        case .connected(let short): return "connected to \(short)"
         case .error(let msg): return "error: \(msg)"
         }
     }
@@ -113,7 +113,7 @@ struct ContentView: View {
 private extension IrohPeer {
     var opponentColor: Color {
         if case .connected(let short) = state {
-            return PongColors.color(forEndpointId: short)
+            return DotColors.color(forEndpointId: short)
         }
         return .gray
     }
