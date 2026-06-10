@@ -45,3 +45,7 @@ hello-iroh-ffi/
 
 - [docs.iroh.computer](https://docs.iroh.computer) — iroh concepts and language guides
 - [iroh-ffi](https://github.com/n0-computer/iroh-ffi) — Swift, Kotlin, Python, and Node bindings
+
+## License
+
+[MIT](LICENSE)
