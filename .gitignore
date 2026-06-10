@@ -1,0 +1,13 @@
+# macOS
+.DS_Store
+
+# Claude Code session state
+.claude/
+
+# Working notes, kept out of the repo by convention
+plans/
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+swift/HelloIroh.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/

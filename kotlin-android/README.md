@@ -1,47 +1,16 @@
-# iroh-dot — Kotlin (Android)
+# Hello Iroh FFI — Kotlin (Android)
 
-Android version of the iroh-dot demo. Two peers connect over an iroh bi-directional stream, and each controls one dot in a shared coordinate space. Compose UI, Kotlin coroutines, and the [iroh-ffi](https://github.com/n0-computer/iroh-ffi) Kotlin bindings.
+Android version of the Hello Iroh FFI demo. Two peers connect over an iroh bi-directional stream, and each controls one dot in a shared coordinate space. Compose UI, Kotlin coroutines, and the [iroh-ffi](https://github.com/n0-computer/iroh-ffi) Kotlin bindings from Maven Central.
 
 Wire-compatible with the Swift app in [../swift](../swift): an Android peer shares a screen with an iPhone or a Mac.
-
-## Status
-
-Working end-to-end on a headless Android 14 arm64 emulator: bind an Endpoint, load persistent identity, activate iroh-services telemetry, render the dot field. Cross-platform play against the Swift app should follow from the shared wire format.
-
-Requires iroh-ffi's [`feat-1-0-android-context`](https://github.com/n0-computer/iroh-ffi/tree/feat-1-0-android-context) branch, which adds an Android JNI initialization hook so iroh's DNS resolver can read system DNS via `LinkProperties`. The app calls `IrohAndroid.installAndroidContext(applicationContext)` once at startup — see `MainViewModel.kt`. When that branch lands on `feat-1-0` (or in a published Maven artifact), this requirement goes away.
 
 ## Prerequisites
 
 - **JDK 17** — `brew install openjdk@17`, or install Android Studio which bundles a JBR.
-- **Android Studio Ladybug (2024.2) or newer**, with:
-  - Android SDK platform 35
-  - **NDK r26+** (Android Studio: *SDK Manager → SDK Tools → NDK (Side by side)*)
-- **`cargo-ndk`** — `cargo install --version 3.5.4 cargo-ndk --locked`
+- **Android Studio Ladybug (2024.2) or newer**, with Android SDK platform 35
 - An Android device or emulator running Android 8.0 (API 26) or newer
 
-## Setup
-
-This project expects [`iroh-ffi`](https://github.com/n0-computer/iroh-ffi) checked out as a sibling of `iroh-dot` on the `feat-1-0-android-context` branch:
-
-```
-parent-dir/
-├── iroh-dot/
-│   └── kotlin-android/    ← this directory
-└── iroh-ffi/              ← on branch feat-1-0-android-context
-```
-
-```bash
-git clone --branch feat-1-0-android-context https://github.com/n0-computer/iroh-ffi.git
-```
-
-Until iroh-ffi publishes an Android-friendly Maven artifact, this project pulls its generated Kotlin sources and per-ABI `.so` files directly out of the sibling checkout via Gradle source-set inclusion. The `.so` files are produced by a one-time build:
-
-```bash
-cd ../../iroh-ffi
-cargo make kotlin-android
-```
-
-This cross-compiles `libiroh_ffi.so` for `armeabi-v7a`, `arm64-v8a`, `x86`, and `x86_64` into `iroh-ffi/kotlin/lib/src/main/jniLibs/`, and regenerates the Kotlin bindings into `iroh-ffi/kotlin/lib/src/main/kotlin/`. First build takes 5–15 minutes; subsequent builds reuse cargo's cache.
+That's it. The app depends on [`computer.iroh:iroh`](https://central.sonatype.com/artifact/computer.iroh/iroh) from Maven Central, which bundles the native `libiroh_ffi.so` for every Android ABI — no NDK, no Rust toolchain, no iroh-ffi checkout.
 
 ## Build and run
 
@@ -63,6 +32,7 @@ The app launches into a single screen: your endpoint id at the top with a Copy b
 3. On device B, paste into the **Peer endpoint id** field and tap **Connect**.
 4. Tilt the phone to move your dot: it rolls toward the lowered edge, like a ball on a tray. In the emulator, where there is no gravity sensor, drag on the field instead.
 5. Both dots appear in the same coordinate space, tinted by endpoint id, so you can watch the peer's dot track yours as either of you moves.
+6. The line under the status shows the connection's live paths — direct vs relay, address, RTT, with `*` on the path carrying data. Watch it flip from relay to direct as iroh hole-punches.
 
 ### Telemetry (optional)
 
@@ -76,14 +46,14 @@ kotlin-android/
 ├── settings.gradle.kts              single :app module, no composite build
 ├── gradle.properties                Gradle + Android flags
 └── app/
-    ├── build.gradle.kts             Compose, source-set pull from iroh-ffi
+    ├── build.gradle.kts             Compose + the iroh artifact from Maven Central
     └── src/main/
         ├── AndroidManifest.xml      INTERNET + sensor declaration, portrait
         ├── java/computer/iroh/dot/
         │   ├── MainActivity.kt      Compose host
         │   ├── MainViewModel.kt     ties identity, motion, and peer together
         │   ├── identity/
-        │   │   └── IdentityStore.kt persistent SecretKey + API secret
+        │   │   └── IdentityStore.kt persistent SecretKey
         │   ├── net/
         │   │   ├── IrohPeer.kt      bind, accept loop, connect, services client
         │   │   ├── PeerSession.kt   position send/recv on one bi-stream
@@ -98,6 +68,17 @@ kotlin-android/
         └── res/                     icons, strings, themes
 ```
 
-## When iroh-ffi publishes
+## Configuration quirks worth knowing
 
-Drop the source-set lines in `app/build.gradle.kts` (the `sourceSets { ... }` block) and replace the JNA + coroutines `implementation(...)` lines with a single artifact dependency. The sibling checkout becomes optional.
+These are wired up already, but worth knowing if you're starting a similar project from scratch:
+
+- **`IrohAndroid.installAndroidContext(applicationContext)` once at startup.** iroh's DNS resolver reads system DNS via `LinkProperties`, which needs the process's `JavaVM` and a `Context` installed before the first `Endpoint` is constructed. See `MainViewModel.kt`.
+- **JNA comes from the `@aar` variant.** The iroh artifact declares plain-jar JNA transitively, but Android needs the `@aar` variant, which bundles `libjnidispatch.so` per ABI. `app/build.gradle.kts` excludes the transitive jar and declares the `@aar` explicitly; keeping both causes a duplicate-class error at packaging time.
+- **Kotlin 2.2+.** The published iroh artifact carries Kotlin 2.2 metadata, which a 2.0 compiler can't read ("Module was compiled with an incompatible version of Kotlin").
+- **No extra permissions.** Everything the app does — QUIC to peers and relays, DNS/pkarr lookups — is covered by `INTERNET`. Notably no `NSLocalNetworkUsageDescription`-style local-network permission exists on Android, and no multicast permissions are needed since the demo does no mDNS discovery.
+
+## Further reading
+
+- [docs.iroh.computer/languages/kotlin](https://docs.iroh.computer/languages/kotlin) — the Kotlin setup guide
+- [docs.iroh.computer/concepts/endpoints](https://docs.iroh.computer/concepts/endpoints) — what endpoints, ids, and addresses actually are
+- [iroh-ffi](https://github.com/n0-computer/iroh-ffi) — the Swift, Kotlin, Python, and Node bindings
