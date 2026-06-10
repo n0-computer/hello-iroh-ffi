@@ -1,8 +1,8 @@
-# iroh-pong — Swift (iOS + macOS)
+# iroh-dot — Swift (iOS + macOS)
 
-A small iOS + macOS Pong demo built on [iroh](https://github.com/n0-computer/iroh) via the [iroh-ffi](https://github.com/n0-computer/iroh-ffi) Swift bindings.
+A small iOS + macOS presence demo built on [iroh](https://github.com/n0-computer/iroh) via the [iroh-ffi](https://github.com/n0-computer/iroh-ffi) Swift bindings.
 
-Two peers connect over an iroh bi-directional stream and play a round of Pong. Paddles move with device tilt on iOS (CoreMotion gravity) or a mouse drag on macOS. Discovery is manual: copy your endpoint id, paste it on the other peer, tap Connect.
+Two peers connect over an iroh bi-directional stream, and each controls one dot in a shared coordinate space. Your dot moves with device tilt on iOS (CoreMotion gravity) or a mouse drag on macOS, and the other peer sees it move in real time. Discovery is manual: copy your endpoint id, paste it on the other peer, tap Connect.
 
 The endpoint id is persisted across launches, so the copy/paste happens once and the demo keeps working session over session.
 
@@ -16,11 +16,11 @@ The Xcode project consumes iroh-ffi as a **local** Swift Package at `../../iroh-
 
 ## Setup
 
-Clone iroh-ffi as a sibling of `iroh-pong` on the `feat-1-0` branch, install the Apple Rust targets, and build the xcframework:
+Clone iroh-ffi as a sibling of `iroh-dot` on the `feat-1-0` branch, install the Apple Rust targets, and build the xcframework:
 
 ```
 parent-dir/
-├── iroh-pong/
+├── iroh-dot/
 │   └── swift/             ← this directory
 └── iroh-ffi/              ← on branch feat-1-0
 ```
@@ -46,29 +46,27 @@ Open `HelloIroh.xcodeproj` in Xcode and let it finish resolving the Swift Packag
 - **iOS Simulator**: pick any iPhone simulator destination and Run.
 - **iOS device**: select your device, signed with your team. The first time, trust the developer certificate under **Settings → General → VPN & Device Management**.
 
-The app launches into a small UI: your full endpoint id at the top with a Copy button and a gear (Settings), a text field for the peer's endpoint id with a Connect button, and the Pong field underneath.
+The app launches into a small UI: your full endpoint id at the top with a Copy button and a gear (Settings), a text field for the peer's endpoint id with a Connect button, and the dot field underneath.
 
 ## Play the demo
 
 1. Build and run on two devices (e.g. your Mac and an iPhone, or two iPhones).
 2. On device A, tap **Copy** and send the id to device B (Messages, AirDrop, whatever).
 3. On device B, paste into the **Peer endpoint id** field and tap **Connect**.
-4. The peer that tapped Connect is the **ball authority** — it simulates the ball physics and streams ball state. The other peer is paddle-only.
-5. Tilt your iPhone left/right to move your paddle (at the bottom of your screen). On the Mac, drag anywhere in the field — paddle follows your cursor's x. Your opponent appears at the top of your screen.
-6. First to 7 wins. The score resets when a new session starts.
+4. Tilt your iPhone to move your dot: it rolls toward the lowered edge, like a ball on a tray. On the Mac, drag anywhere in the field and the dot follows your cursor.
+5. Both dots appear in the same coordinate space, tinted by endpoint id, so you can watch the peer's dot track yours as either of you moves.
 
 ### Wire format
 
-Each peer streams over a single bi-directional stream at ~60 Hz with two tagged frame types:
+Each peer streams its dot position over a single bi-directional stream at ~60 Hz. There is one frame type, so no tag byte is needed:
 
-| Tag | Frame | Size | Sender |
-|---|---|---|---|
-| `0` | Paddle: `f32 x` | 5 B | both peers |
-| `1` | Ball: `f32 x, f32 y, f32 vx, f32 vy, u16 myScore, u16 theirScore` | 21 B | authority only |
+| Frame | Size | Layout |
+|---|---|---|
+| Position | 8 B | `f32 x, f32 y` |
 
-All coordinates are in `[-1, 1]`. Each peer is rendered on the bottom of its own screen, so the y axis is flipped on receive (the x axis is shared). Velocity is included in the ball frame so the non-authority can extrapolate between snapshots; the authority lead-compensates the opponent paddle position (via a smoothed velocity estimate) when checking collisions, to offset network latency.
+Both coordinates are in `[-1, 1]`, little-endian, and shared directly: the peer renders your dot at the position you send. The receive loop reads a fixed 8 bytes per frame.
 
-ALPN: `iroh-helloiroh-pong/0`.
+ALPN: `iroh-helloiroh-dot/0`.
 
 ### Settings
 
@@ -84,12 +82,12 @@ swift/
 │   ├── SettingsView.swift     API key entry + telemetry status
 │   ├── IdentityStore.swift    persists the secret key in UserDefaults
 │   ├── IrohPeer.swift         binds the Endpoint, runs the accept loop,
-│   │                          owns PongGame and decides ball authority
-│   ├── PeerSession.swift      tagged frame send/recv on one bi-stream
-│   ├── PongGame.swift         paddles, ball, scores, physics, prediction
-│   ├── PongScene.swift        SwiftUI rendering of field + paddles + ball
-│   ├── MotionSource.swift     iOS gravity / macOS drag → 1D paddle x
-│   ├── WireFormat.swift       ALPN + tagged frame encode/decode
+│   │                          owns DotGame, drives the session
+│   ├── PeerSession.swift      position send/recv on one bi-stream
+│   ├── DotGame.swift          my dot + peer's dot positions
+│   ├── DotScene.swift         SwiftUI rendering of the two dots
+│   ├── MotionSource.swift     iOS gravity / macOS drag → 2D position
+│   ├── WireFormat.swift       ALPN + position frame encode/decode
 │   └── HelloIroh.entitlements network sandbox entitlements (macOS)
 └── HelloIroh.xcodeproj
 ```

@@ -1,4 +1,4 @@
-package computer.iroh.pong.identity
+package computer.iroh.dot.identity
 
 import android.content.Context
 import android.util.Base64
@@ -25,7 +25,7 @@ class IdentityStore private constructor(
         }
 
     companion object {
-        private const val PREFS_NAME = "iroh.pong.identity"
+        private const val PREFS_NAME = "iroh.dot.identity"
         private const val KEY_SECRET = "secretKey"
         private const val KEY_API_SECRET = "apiSecret"
 

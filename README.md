@@ -1,6 +1,6 @@
-# iroh-pong
+# iroh-dot
 
-Two-player Pong over [iroh](https://github.com/n0-computer/iroh), implemented in parallel on iOS/macOS and Android. Each platform is a self-contained app that speaks the same wire format, so a Swift peer and a Kotlin peer can play each other.
+A minimal presence demo over [iroh](https://github.com/n0-computer/iroh), implemented in parallel on iOS/macOS and Android. Each platform is a self-contained app that speaks the same wire format, so a Swift peer and a Kotlin peer can share a screen.
 
 | Platform | Language | Status | Details |
 |---|---|---|---|
@@ -11,27 +11,26 @@ Both implementations use [iroh-ffi](https://github.com/n0-computer/iroh-ffi) for
 
 ## How the demo works
 
-Two peers connect over an iroh bi-directional stream and exchange paddle positions and ball state at ~60 Hz. Paddles move with device tilt on phones and with a mouse drag on the desktop builds. Discovery is manual: copy your endpoint id, paste it on the other peer, tap Connect.
+Each peer controls one dot in a shared coordinate space. You move your dot by tilting the phone or dragging on the desktop, and you stream its position to the other peer at ~60 Hz over an iroh bi-directional stream. The peer renders your dot at the same coordinates next to its own, so both screens show the two dots tracking each other in real time.
 
-The peer that taps Connect is the ball authority — it simulates ball physics and streams ball state. The other peer sends paddle x only. First to 7 wins.
+The two peers are fully symmetric. There is no game, no score, and no authority role: each side sends its own position and renders the other's. Discovery is manual: copy your endpoint id, paste it on the other peer, tap Connect.
 
 ### Wire format
 
-A single bi-directional stream carries two tagged frame types:
+A single bi-directional stream carries one frame type, sent continuously by both peers:
 
-| Tag | Frame | Size | Sender |
-|---|---|---|---|
-| `0` | Paddle: `f32 x` | 5 B | both peers |
-| `1` | Ball: `f32 x, f32 y, f32 vx, f32 vy, u16 myScore, u16 theirScore` | 21 B | authority only |
+| Frame | Size | Layout |
+|---|---|---|
+| Position | 8 B | `f32 x, f32 y` |
 
-All coordinates are in `[-1, 1]`. Each peer renders itself on the bottom of its own screen, so y is flipped on receive; x is shared. Velocity rides along with the ball frame so the non-authority can extrapolate between snapshots.
+Both coordinates are in `[-1, 1]`, little-endian, and shared directly: the peer renders your dot at the position you send. With only one message type there is no tag byte, so the receive loop reads a fixed 8 bytes per frame.
 
-ALPN: `iroh-helloiroh-pong/0`.
+ALPN: `iroh-helloiroh-dot/0`.
 
 ## Repo layout
 
 ```
-iroh-pong/
+iroh-dot/
 ├── README.md
 ├── swift/              iOS + macOS app (Swift / SwiftUI)
 └── kotlin-android/     Android app (Kotlin / Jetpack Compose)

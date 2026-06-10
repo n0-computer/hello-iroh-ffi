@@ -1,4 +1,4 @@
-package computer.iroh.pong.ui
+package computer.iroh.dot.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,7 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import computer.iroh.pong.net.IrohPeer
+import computer.iroh.dot.net.IrohPeer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

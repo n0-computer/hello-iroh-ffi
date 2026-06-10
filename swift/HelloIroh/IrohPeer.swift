@@ -27,7 +27,7 @@ final class IrohPeer {
     }
 
     let motion: MotionSource
-    let game = PongGame()
+    let game = DotGame()
 
     var endpointId: String = ""
     var state: ConnectionState = .idle
@@ -104,7 +104,7 @@ final class IrohPeer {
         #elseif os(macOS)
         return "macos-\(short)"
         #else
-        return "pong-\(short)"
+        return "dot-\(short)"
         #endif
     }
 
@@ -120,7 +120,7 @@ final class IrohPeer {
         do {
             let conn = try await ep.connect(addr: addr, alpn: WireFormat.alpn)
             let bi = try await conn.openBi()
-            adoptSession(bi: bi, remoteIdHex: parsed.description, asAuthority: true)
+            adoptSession(bi: bi, remoteIdHex: parsed.description)
         } catch {
             state = .error("connect failed: \(error)")
         }
@@ -145,30 +145,28 @@ final class IrohPeer {
                 let conn = try await accepting.connect()
                 let bi = try await conn.acceptBi()
                 let remoteId = conn.remoteId().description
-                adoptSession(bi: bi, remoteIdHex: remoteId, asAuthority: false)
+                adoptSession(bi: bi, remoteIdHex: remoteId)
             } catch {
                 continue
             }
         }
     }
 
-    private func adoptSession(bi: BiStream, remoteIdHex: String, asAuthority: Bool) {
+    private func adoptSession(bi: BiStream, remoteIdHex: String) {
         currentSession?.stop()
-        game.resetForNewSession(asAuthority: asAuthority)
+        game.resetForNewSession()
         let game = self.game
         let motion = self.motion
         let session = PeerSession(
             bi: bi,
-            produceFrames: {
+            produceFrame: {
                 await MainActor.run {
-                    game.produceTickFrames(myPaddleX: motion.paddleX)
+                    game.setMyPos(x: motion.x, y: motion.y)
+                    return WireFormat.encodePosition(x: game.myPos.x, y: game.myPos.y)
                 }
             },
-            onPaddleReceived: { x in
-                Task { @MainActor in game.receivedOpponentPaddle(x: x) }
-            },
-            onBallReceived: { payload in
-                Task { @MainActor in game.receivedBall(payload: payload) }
+            onPositionReceived: { pos in
+                Task { @MainActor in game.receivedTheirPos(x: pos.x, y: pos.y) }
             },
             onClosed: { [weak self] in
                 Task { @MainActor in self?.handleSessionClosed() }

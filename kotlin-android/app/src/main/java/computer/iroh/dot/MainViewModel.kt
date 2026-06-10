@@ -1,12 +1,12 @@
-package computer.iroh.pong
+package computer.iroh.dot
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import computer.iroh.IrohAndroid
-import computer.iroh.pong.game.MotionSource
-import computer.iroh.pong.identity.IdentityStore
-import computer.iroh.pong.net.IrohPeer
+import computer.iroh.dot.game.MotionSource
+import computer.iroh.dot.identity.IdentityStore
+import computer.iroh.dot.net.IrohPeer
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
 

@@ -1,4 +1,4 @@
-package computer.iroh.pong.net
+package computer.iroh.dot.net
 
 import android.os.Build
 import android.util.Log
@@ -10,9 +10,9 @@ import computer.iroh.EndpointOptions
 import computer.iroh.ServicesClient
 import computer.iroh.ServicesOptions
 import computer.iroh.presetN0
-import computer.iroh.pong.game.MotionSource
-import computer.iroh.pong.game.PongGame
-import computer.iroh.pong.identity.IdentityStore
+import computer.iroh.dot.game.DotGame
+import computer.iroh.dot.game.MotionSource
+import computer.iroh.dot.identity.IdentityStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
@@ -45,7 +45,7 @@ class IrohPeer(
         data class Error(val message: String) : TelemetryState
     }
 
-    val game = PongGame()
+    val game = DotGame()
 
     private val _state = MutableStateFlow<State>(State.Idle)
     val state: StateFlow<State> = _state.asStateFlow()
@@ -103,7 +103,7 @@ class IrohPeer(
                 val addr = EndpointAddr(parsed, null, emptyList())
                 val conn = ep.connect(addr, WireFormat.ALPN)
                 val bi = conn.openBi()
-                adoptSession(bi, parsed.toString(), asAuthority = true)
+                adoptSession(bi, parsed.toString())
             } catch (t: Throwable) {
                 _state.value = State.Error("connect failed: ${t.message ?: t}")
             }
@@ -156,24 +156,26 @@ class IrohPeer(
                 val conn = accepting.connect()
                 val bi = conn.acceptBi()
                 val remoteIdHex = conn.remoteId().toString()
-                adoptSession(bi, remoteIdHex, asAuthority = false)
+                adoptSession(bi, remoteIdHex)
             } catch (t: Throwable) {
                 Log.w(TAG, "accept flow threw", t)
             }
         }
     }
 
-    private fun adoptSession(bi: BiStream, remoteIdHex: String, asAuthority: Boolean) {
+    private fun adoptSession(bi: BiStream, remoteIdHex: String) {
         session?.stop()
-        game.resetForNewSession(asAuthority)
+        game.resetForNewSession()
         val g = game
         val m = motion
         lateinit var s: PeerSession
         s = PeerSession(
             bi = bi,
-            produceFrames = { g.produceTickFrames(m.paddleX) },
-            onPaddleReceived = { x -> g.receivedOpponentPaddle(x) },
-            onBallReceived = { p -> g.receivedBall(p) },
+            produceFrame = {
+                g.setMyPos(m.x, m.y)
+                WireFormat.encodePosition(g.myPos.x, g.myPos.y)
+            },
+            onPositionReceived = { p -> g.receivedTheirPos(p.x, p.y) },
             // Capture the session identity in the closure so a late-firing
             // onClosed from a previous session can't tear down the current one.
             onClosed = { if (session === s) handleSessionClosed() },
@@ -182,7 +184,7 @@ class IrohPeer(
         s.start(scope)
         val short = remoteIdHex.take(10)
         _state.value = State.Connected(short)
-        Log.d(TAG, "session adopted with $remoteIdHex (authority=$asAuthority)")
+        Log.d(TAG, "session adopted with $remoteIdHex")
     }
 
     private fun handleSessionClosed() {

@@ -1,4 +1,4 @@
-package computer.iroh.pong.net
+package computer.iroh.dot.net
 
 import computer.iroh.BiStream
 import kotlinx.coroutines.CancellationException
@@ -10,15 +10,15 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 /**
- * Tagged-frame loop on a single bi-directional stream. Both peers run the
- * same send/recv loops; the producer callback decides per-tick what to
- * send, including whether ball frames go out (authority-only).
+ * Position exchange on a single bi-directional stream. Both peers run the
+ * same send/recv loops: send our dot position every tick, read the peer's
+ * position as it arrives. Every frame is a fixed 8 bytes, so the recv loop
+ * just reads 8 bytes in a loop.
  */
 class PeerSession(
     private val bi: BiStream,
-    private val produceFrames: suspend () -> Pair<ByteArray, ByteArray?>,
-    private val onPaddleReceived: (Float) -> Unit,
-    private val onBallReceived: (WireFormat.BallPayload) -> Unit,
+    private val produceFrame: suspend () -> ByteArray,
+    private val onPositionReceived: (WireFormat.Position) -> Unit,
     private val onClosed: () -> Unit,
 ) {
     private var sendJob: Job? = null
@@ -39,9 +39,7 @@ class PeerSession(
         val tickMs = 16L
         try {
             while (currentCoroutineContext().isActive) {
-                val (paddle, ball) = produceFrames()
-                send.writeAll(paddle)
-                if (ball != null) send.writeAll(ball)
+                send.writeAll(produceFrame())
                 delay(tickMs)
             }
         } catch (e: CancellationException) {
@@ -57,18 +55,8 @@ class PeerSession(
         val recv = bi.recv()
         try {
             while (currentCoroutineContext().isActive) {
-                val tagBytes = recv.readExact(1u)
-                when (tagBytes[0]) {
-                    WireFormat.TAG_PADDLE -> {
-                        val body = recv.readExact(WireFormat.PADDLE_FRAME_SIZE - 1u)
-                        WireFormat.decodePaddleBody(body)?.let(onPaddleReceived)
-                    }
-                    WireFormat.TAG_BALL -> {
-                        val body = recv.readExact(WireFormat.BALL_FRAME_SIZE - 1u)
-                        WireFormat.decodeBallBody(body)?.let(onBallReceived)
-                    }
-                    else -> return
-                }
+                val body = recv.readExact(WireFormat.POSITION_FRAME_SIZE)
+                WireFormat.decodePosition(body)?.let(onPositionReceived)
             }
         } catch (e: CancellationException) {
             throw e

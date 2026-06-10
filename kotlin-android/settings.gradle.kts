@@ -20,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "iroh-pong"
+rootProject.name = "iroh-dot"
 include(":app")
