@@ -4,7 +4,6 @@ struct ContentView: View {
     @State private var motion = MotionSource()
     @State private var peer: IrohPeer?
     @State private var peerIdInput: String = ""
-    @State private var showingSettings = false
 
     var body: some View {
         VStack(spacing: 12) {
@@ -32,11 +31,6 @@ struct ContentView: View {
                 await p.start()
             }
         }
-        .sheet(isPresented: $showingSettings) {
-            if let peer {
-                SettingsView(peer: peer)
-            }
-        }
     }
 
     @ViewBuilder
@@ -52,13 +46,6 @@ struct ContentView: View {
                 .buttonStyle(.bordered)
                 .disabled(peer.endpointId.isEmpty)
             Spacer(minLength: 0)
-            Button {
-                showingSettings = true
-            } label: {
-                Image(systemName: "gearshape")
-            }
-            .buttonStyle(.bordered)
-            .accessibilityLabel("Settings")
         }
     }
 

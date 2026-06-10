@@ -19,25 +19,16 @@ final class IrohPeer {
         case error(String)
     }
 
-    enum TelemetryState: Equatable {
-        case off
-        case starting
-        case active(name: String)
-        case error(String)
-    }
-
     let motion: MotionSource
     let game = DotGame()
 
     var endpointId: String = ""
     var state: ConnectionState = .idle
-    var telemetry: TelemetryState = .off
-    var apiSecret: String = UserDefaults.standard.string(forKey: IrohPeer.apiSecretKey) ?? ""
 
-    static let apiSecretKey = "iroh.helloiroh.apiSecret"
-    static let defaultApiSecret = "servicesaaqg6nnf7kr3uiacviqgbxeqconvhuz4ldr5dem4gqhsp3cyat6qxexoctwjsi7m6dh2t2qvfu2yhdoaav6eibaj4aaavhonlixbohceu4aa"
-
-    var isUsingDefaultApiSecret: Bool { apiSecret.isEmpty }
+    /// Paste an API key from https://services.iroh.computer to see this
+    /// device's metrics in your dashboard. With the placeholder left in
+    /// place the services client fails to start; the demo works either way.
+    static let apiSecret = "<your-iroh-services-api-key>"
 
     private var endpoint: Endpoint?
     private var acceptTask: Task<Void, Never>?
@@ -72,28 +63,15 @@ final class IrohPeer {
         }
     }
 
-    func saveApiSecret(_ secret: String) async {
-        let trimmed = secret.trimmingCharacters(in: .whitespacesAndNewlines)
-        apiSecret = trimmed
-        UserDefaults.standard.set(trimmed, forKey: Self.apiSecretKey)
-        await startServicesClient()
-    }
-
     private func startServicesClient() async {
-        services = nil
-        let secret = apiSecret.isEmpty ? Self.defaultApiSecret : apiSecret
         guard let ep = endpoint else { return }
-        telemetry = .starting
-        let name = deviceName()
         do {
-            let client = try await ServicesClient.create(
+            services = try await ServicesClient.create(
                 endpoint: ep,
-                options: ServicesOptions(apiSecret: secret, name: name)
+                options: ServicesOptions(apiSecret: Self.apiSecret, name: deviceName())
             )
-            services = client
-            telemetry = .active(name: name)
         } catch {
-            telemetry = .error("\(error)")
+            print("iroh services client not started: \(error)")
         }
     }
 

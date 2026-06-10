@@ -9,25 +9,14 @@ import computer.iroh.SecretKey
  * generate a SecretKey on first launch, persist the 32 raw bytes as
  * base64 in SharedPreferences, reload it on subsequent launches so the
  * endpoint id is stable across sessions.
- *
- * The API secret for iroh-services is persisted alongside in the same
- * preferences file (default empty string = "use bundled default").
  */
 class IdentityStore private constructor(
     val secretKey: SecretKey,
     val endpointId: String,
-    private val prefs: android.content.SharedPreferences,
 ) {
-    var apiSecret: String
-        get() = prefs.getString(KEY_API_SECRET, "") ?: ""
-        set(value) {
-            prefs.edit().putString(KEY_API_SECRET, value).apply()
-        }
-
     companion object {
         private const val PREFS_NAME = "iroh.dot.identity"
         private const val KEY_SECRET = "secretKey"
-        private const val KEY_API_SECRET = "apiSecret"
 
         fun loadOrCreate(context: Context): IdentityStore {
             val prefs = context.applicationContext
@@ -36,7 +25,6 @@ class IdentityStore private constructor(
             return IdentityStore(
                 secretKey = secret,
                 endpointId = secret.public().toString(),
-                prefs = prefs,
             )
         }
 
