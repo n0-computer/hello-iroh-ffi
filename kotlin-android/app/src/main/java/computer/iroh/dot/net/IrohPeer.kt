@@ -40,13 +40,6 @@ class IrohPeer(
         data class Error(val message: String) : State
     }
 
-    sealed interface TelemetryState {
-        data object Off : TelemetryState
-        data object Starting : TelemetryState
-        data class Active(val name: String) : TelemetryState
-        data class Error(val message: String) : TelemetryState
-    }
-
     val game = DotGame()
 
     private val _state = MutableStateFlow<State>(State.Idle)
@@ -55,20 +48,12 @@ class IrohPeer(
     private val _endpointId = MutableStateFlow(identity.endpointId)
     val endpointId: StateFlow<String> = _endpointId.asStateFlow()
 
-    private val _telemetry = MutableStateFlow<TelemetryState>(TelemetryState.Off)
-    val telemetry: StateFlow<TelemetryState> = _telemetry.asStateFlow()
-
-    private val _apiSecret = MutableStateFlow(identity.apiSecret)
-    val apiSecret: StateFlow<String> = _apiSecret.asStateFlow()
-
     /**
      * One-line live view of the connection's open network paths
      * (direct vs relay, address, RTT), rendered under the status line.
      */
     private val _pathInfo = MutableStateFlow("")
     val pathInfo: StateFlow<String> = _pathInfo.asStateFlow()
-
-    val isUsingDefaultApiSecret: Boolean get() = _apiSecret.value.isEmpty()
 
     private var endpoint: Endpoint? = null
     private var acceptJob: Job? = null
@@ -120,28 +105,15 @@ class IrohPeer(
         }
     }
 
-    fun saveApiSecret(secret: String) {
-        val trimmed = secret.trim()
-        identity.apiSecret = trimmed
-        _apiSecret.value = trimmed
-        scope.launch { startServicesClient() }
-    }
-
     private suspend fun startServicesClient() {
-        services = null
         val ep = endpoint ?: return
-        val secret = _apiSecret.value.ifEmpty { DEFAULT_API_SECRET }
-        val name = deviceName()
-        _telemetry.value = TelemetryState.Starting
         try {
-            val client = ServicesClient.create(
+            services = ServicesClient.create(
                 ep,
-                ServicesOptions(apiSecret = secret, name = name),
+                ServicesOptions(apiSecret = API_SECRET, name = deviceName()),
             )
-            services = client
-            _telemetry.value = TelemetryState.Active(name)
         } catch (t: Throwable) {
-            _telemetry.value = TelemetryState.Error("${t.message ?: t}")
+            Log.w(TAG, "iroh services client not started: ${t.message ?: t}")
         }
     }
 
@@ -227,6 +199,9 @@ class IrohPeer(
     }
 
     companion object {
-        const val DEFAULT_API_SECRET = "servicesaaqg6nnf7kr3uiacviqgbxeqconvhuz4ldr5dem4gqhsp3cyat6qxexoctwjsi7m6dh2t2qvfu2yhdoaav6eibaj4aaavhonlixbohceu4aa"
+        // Paste an API key from https://services.iroh.computer to see this
+        // device's metrics in your dashboard. With the placeholder left in
+        // place the services client fails to start; the demo works either way.
+        const val API_SECRET = "<your-iroh-services-api-key>"
     }
 }

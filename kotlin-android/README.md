@@ -54,7 +54,7 @@ Open `kotlin-android/` in Android Studio and let it finish the initial Gradle sy
 
 Or use *Run → Run 'app'* in Android Studio.
 
-The app launches into a single screen: your endpoint id at the top with a Copy button and a gear (Settings), a text field for the peer's endpoint id with a Connect button, and the dot field underneath. The endpoint id is persisted across launches, so the copy/paste happens once.
+The app launches into a single screen: your endpoint id at the top with a Copy button, a text field for the peer's endpoint id with a Connect button, and the dot field underneath. The endpoint id is persisted across launches, so the copy/paste happens once.
 
 ## Play the demo
 
@@ -64,9 +64,9 @@ The app launches into a single screen: your endpoint id at the top with a Copy b
 4. Tilt the phone to move your dot: it rolls toward the lowered edge, like a ball on a tray. In the emulator, where there is no gravity sensor, drag on the field instead.
 5. Both dots appear in the same coordinate space, tinted by endpoint id, so you can watch the peer's dot track yours as either of you moves.
 
-### Settings
+### Telemetry (optional)
 
-The gear button opens a modal sheet with an entry for an iroh services API key (stored in SharedPreferences). A default key is bundled in source so telemetry comes up automatically on a fresh install; paste your own secret to override, or tap Clear to revert.
+The app starts an iroh services client at boot so its metrics can show up in a [services.iroh.computer](https://services.iroh.computer) dashboard. The API key in `IrohPeer.kt` is a placeholder; paste your own to enable it. With the placeholder left in place the client fails to start and the demo works normally without telemetry.
 
 ## Project layout
 
@@ -94,7 +94,6 @@ kotlin-android/
         │   │   └── MotionSource.kt  gravity sensor + drag fallback
         │   └── ui/
         │       ├── EndpointScreen.kt
-        │       ├── SettingsBottomSheet.kt
         │       └── theme/Theme.kt
         └── res/                     icons, strings, themes
 ```

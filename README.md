@@ -1,13 +1,13 @@
-# iroh-dot
+# Hello Iroh FFI
 
-A minimal presence demo over [iroh](https://github.com/n0-computer/iroh), implemented in parallel on iOS/macOS and Android. Each platform is a self-contained app that speaks the same wire format, so a Swift peer and a Kotlin peer can share a screen.
+This repositroy is a minimal presence demo over [iroh](https://github.com/n0-computer/iroh), implemented in parallel on iOS/macOS and Android. Each platform is a self-contained app that speaks the same wire format, so a Swift peer and a Kotlin peer can share a screen.
 
 | Platform | Language | Status | Details |
 |---|---|---|---|
 | iOS + macOS | Swift / SwiftUI | working | [swift/README.md](swift/README.md) |
-| Android | Kotlin / Jetpack Compose | working (against iroh-ffi `feat-1-0-android-context`) | [kotlin-android/README.md](kotlin-android/README.md) |
+| Android | Kotlin / Jetpack Compose | working  | [kotlin-android/README.md](kotlin-android/README.md) |
 
-Both implementations use [iroh-ffi](https://github.com/n0-computer/iroh-ffi) for the iroh bindings.
+Both implementations use [iroh-ffi](https://github.com/n0-computer/iroh-ffi) for the iroh bindings. Read more about language bindings at 
 
 ## How the demo works
 

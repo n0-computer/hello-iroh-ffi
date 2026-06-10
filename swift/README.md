@@ -46,7 +46,7 @@ Open `HelloIroh.xcodeproj` in Xcode and let it finish resolving the Swift Packag
 - **iOS Simulator**: pick any iPhone simulator destination and Run.
 - **iOS device**: select your device, signed with your team. The first time, trust the developer certificate under **Settings → General → VPN & Device Management**.
 
-The app launches into a small UI: your full endpoint id at the top with a Copy button and a gear (Settings), a text field for the peer's endpoint id with a Connect button, and the dot field underneath.
+The app launches into a small UI: your full endpoint id at the top with a Copy button, a text field for the peer's endpoint id with a Connect button, and the dot field underneath.
 
 ## Play the demo
 
@@ -68,9 +68,9 @@ Both coordinates are in `[-1, 1]`, little-endian, and shared directly: the peer 
 
 ALPN: `iroh-helloiroh-dot/0`.
 
-### Settings
+### Telemetry (optional)
 
-The gear button in the header opens a modal Settings sheet with an entry for an iroh services API key (stored in UserDefaults). A default key is bundled in source, so telemetry comes up automatically on a fresh install; paste your own secret to override it, or tap Clear to revert.
+The app starts an iroh services client at boot so its metrics can show up in a [services.iroh.computer](https://services.iroh.computer) dashboard. The API key in `IrohPeer.swift` is a placeholder; paste your own to enable it. With the placeholder left in place the client fails to start and the demo works normally without telemetry.
 
 ## Project layout
 
@@ -78,8 +78,7 @@ The gear button in the header opens a modal Settings sheet with an entry for an 
 swift/
 ├── HelloIroh/
 │   ├── HelloIrohApp.swift     entry point
-│   ├── ContentView.swift      assembles the UI, owns the Settings sheet
-│   ├── SettingsView.swift     API key entry + telemetry status
+│   ├── ContentView.swift      assembles the UI
 │   ├── IdentityStore.swift    persists the secret key in UserDefaults
 │   ├── IrohPeer.swift         binds the Endpoint, runs the accept loop,
 │   │                          owns DotGame, drives the session

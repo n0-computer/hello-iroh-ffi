@@ -13,13 +13,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -49,18 +45,10 @@ fun EndpointScreen(viewModel: MainViewModel) {
     val pathInfo by viewModel.peer.pathInfo.collectAsState()
     val context = LocalContext.current
     var peerIdInput by remember { mutableStateOf("") }
-    var settingsOpen by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("iroh-dot") },
-                actions = {
-                    IconButton(onClick = { settingsOpen = true }) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
-                    }
-                },
-            )
+            CenterAlignedTopAppBar(title = { Text("iroh-dot") })
         },
     ) { padding ->
         Column(
@@ -135,13 +123,6 @@ fun EndpointScreen(viewModel: MainViewModel) {
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-            )
-        }
-
-        if (settingsOpen) {
-            SettingsBottomSheet(
-                peer = viewModel.peer,
-                onDismiss = { settingsOpen = false },
             )
         }
     }

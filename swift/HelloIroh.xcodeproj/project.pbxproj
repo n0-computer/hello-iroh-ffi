@@ -406,7 +406,7 @@
 				DEVELOPMENT_TEAM = 3N5967R866;
 				ENABLE_PREVIEWS = NO;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSMotionUsageDescription = "Used to tilt the demo ball based on device motion.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Used to tilt your dot based on device motion.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -454,7 +454,7 @@
 				DEVELOPMENT_TEAM = 3N5967R866;
 				ENABLE_PREVIEWS = NO;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSMotionUsageDescription = "Used to tilt the demo ball based on device motion.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Used to tilt your dot based on device motion.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
