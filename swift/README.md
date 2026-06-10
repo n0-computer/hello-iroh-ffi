@@ -1,4 +1,4 @@
-# iroh-dot — Swift (iOS + macOS)
+# Hello Iroh FFI — Swift (iOS + macOS)
 
 A small iOS + macOS presence demo built on [iroh](https://github.com/n0-computer/iroh) via the [iroh-ffi](https://github.com/n0-computer/iroh-ffi) Swift bindings.
 
@@ -9,34 +9,9 @@ The endpoint id is persisted across launches, so the copy/paste happens once and
 ## Prerequisites
 
 - macOS with [Xcode](https://developer.apple.com/xcode/) 16 or newer
-- [Rust](https://www.rust-lang.org/tools/install) with [`cargo-make`](https://crates.io/crates/cargo-make): `cargo install cargo-make`
 - A free Apple Developer account if you want to run on a physical iPhone
 
-The Xcode project consumes iroh-ffi as a **local** Swift Package at `../../iroh-ffi`. Until iroh-ffi tags a `1.0.0-rc` release whose pre-built xcframework matches the `feat-1-0` source, the project needs a sibling checkout so SPM can use the locally-built xcframework instead of falling through to the stale `v0.20.0` release zip.
-
-## Setup
-
-Clone iroh-ffi as a sibling of `iroh-dot` on the `feat-1-0` branch, install the Apple Rust targets, and build the xcframework:
-
-```
-parent-dir/
-├── iroh-dot/
-│   └── swift/             ← this directory
-└── iroh-ffi/              ← on branch feat-1-0
-```
-
-```bash
-git clone --branch feat-1-0 https://github.com/n0-computer/iroh-ffi
-cd iroh-ffi
-rustup target add \
-  aarch64-apple-ios \
-  aarch64-apple-ios-sim \
-  x86_64-apple-ios \
-  aarch64-apple-darwin
-cargo make swift-xcframework
-```
-
-First build takes 5–15 minutes; subsequent builds reuse cargo's cache. The output goes into `iroh-ffi/IrohLib/artifacts/Iroh.xcframework`, which the Xcode project consumes via the local Swift Package.
+That's it. The Xcode project consumes iroh-ffi as a remote Swift Package pinned to `1.0.0-rc.1`; SPM downloads a prebuilt xcframework, so no Rust toolchain or iroh-ffi checkout is needed.
 
 ## Build and run
 
@@ -44,7 +19,7 @@ Open `HelloIroh.xcodeproj` in Xcode and let it finish resolving the Swift Packag
 
 - **macOS**: select **My Mac** and Run.
 - **iOS Simulator**: pick any iPhone simulator destination and Run.
-- **iOS device**: select your device, signed with your team. The first time, trust the developer certificate under **Settings → General → VPN & Device Management**.
+- **iOS device**: select your device. Under **Signing & Capabilities**, switch the team to your own. The first time, trust the developer certificate under **Settings → General → VPN & Device Management** on the phone.
 
 The app launches into a small UI: your full endpoint id at the top with a Copy button, a text field for the peer's endpoint id with a Connect button, and the dot field underneath.
 
@@ -55,6 +30,7 @@ The app launches into a small UI: your full endpoint id at the top with a Copy b
 3. On device B, paste into the **Peer endpoint id** field and tap **Connect**.
 4. Tilt your iPhone to move your dot: it rolls toward the lowered edge, like a ball on a tray. On the Mac, drag anywhere in the field and the dot follows your cursor.
 5. Both dots appear in the same coordinate space, tinted by endpoint id, so you can watch the peer's dot track yours as either of you moves.
+6. The line under the status shows the connection's live paths — direct vs relay, address, RTT, with `*` on the path carrying data. Watch it flip from relay to direct as iroh hole-punches.
 
 ### Wire format
 
@@ -99,6 +75,7 @@ These are wired up in the Xcode project already, but worth knowing if you're sta
 - **`com.apple.security.network.client` + `network.server` entitlements on macOS.** The App Sandbox blocks both inbound and outbound networking by default.
 - **`NSMotionUsageDescription` on iOS.** CoreMotion's device motion API requires a usage description on iOS 17+.
 - **`ENABLE_PREVIEWS = NO`.** Xcode 16's preview pipeline can't link `SwiftUICore.framework` when a Swift Package is in the graph (*"product being built is not an allowed client of it"*). Previews are off until Apple fixes this upstream.
+- **No `NSLocalNetworkUsageDescription`.** Deliberately omitted: device testing showed iroh's QUIC unicast traffic does not engage the iOS local-network permission — direct LAN connections work without it, even with the app's Local Network toggle off. It only becomes necessary with mDNS-based discovery, which also needs the multicast entitlement.
 
 ## Further reading
 
