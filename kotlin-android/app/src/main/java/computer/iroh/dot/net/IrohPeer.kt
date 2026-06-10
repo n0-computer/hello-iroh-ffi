@@ -3,6 +3,7 @@ package computer.iroh.dot.net
 import android.os.Build
 import android.util.Log
 import computer.iroh.BiStream
+import computer.iroh.Connection
 import computer.iroh.Endpoint
 import computer.iroh.EndpointAddr
 import computer.iroh.EndpointId
@@ -16,6 +17,7 @@ import computer.iroh.dot.identity.IdentityStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -59,10 +61,18 @@ class IrohPeer(
     private val _apiSecret = MutableStateFlow(identity.apiSecret)
     val apiSecret: StateFlow<String> = _apiSecret.asStateFlow()
 
+    /**
+     * One-line live view of the connection's open network paths
+     * (direct vs relay, address, RTT), rendered under the status line.
+     */
+    private val _pathInfo = MutableStateFlow("")
+    val pathInfo: StateFlow<String> = _pathInfo.asStateFlow()
+
     val isUsingDefaultApiSecret: Boolean get() = _apiSecret.value.isEmpty()
 
     private var endpoint: Endpoint? = null
     private var acceptJob: Job? = null
+    private var pathMonitorJob: Job? = null
     private var session: PeerSession? = null
     private var services: ServicesClient? = null
 
@@ -103,7 +113,7 @@ class IrohPeer(
                 val addr = EndpointAddr(parsed, null, emptyList())
                 val conn = ep.connect(addr, WireFormat.ALPN)
                 val bi = conn.openBi()
-                adoptSession(bi, parsed.toString())
+                adoptSession(bi, conn, parsed.toString())
             } catch (t: Throwable) {
                 _state.value = State.Error("connect failed: ${t.message ?: t}")
             }
@@ -156,16 +166,17 @@ class IrohPeer(
                 val conn = accepting.connect()
                 val bi = conn.acceptBi()
                 val remoteIdHex = conn.remoteId().toString()
-                adoptSession(bi, remoteIdHex)
+                adoptSession(bi, conn, remoteIdHex)
             } catch (t: Throwable) {
                 Log.w(TAG, "accept flow threw", t)
             }
         }
     }
 
-    private fun adoptSession(bi: BiStream, remoteIdHex: String) {
+    private fun adoptSession(bi: BiStream, conn: Connection, remoteIdHex: String) {
         session?.stop()
         game.resetForNewSession()
+        startPathMonitor(conn)
         val g = game
         val m = motion
         lateinit var s: PeerSession
@@ -189,8 +200,30 @@ class IrohPeer(
 
     private fun handleSessionClosed() {
         session = null
+        pathMonitorJob?.cancel()
+        pathMonitorJob = null
+        _pathInfo.value = ""
         game.sessionEnded()
         if (_state.value is State.Connected) _state.value = State.Ready
+    }
+
+    /**
+     * Polls the connection's path snapshots once a second and renders them
+     * as one line, so direct-vs-relay and RTT are visible in the UI. The
+     * selected path (the one carrying application data) is marked with "*".
+     */
+    private fun startPathMonitor(conn: Connection) {
+        pathMonitorJob?.cancel()
+        pathMonitorJob = scope.launch {
+            while (currentCoroutineContext().isActive) {
+                _pathInfo.value = conn.paths().joinToString(" | ") { p ->
+                    val kind = if (p.isRelay) "relay" else if (p.isIp) "direct" else "?"
+                    val mark = if (p.isSelected) "* " else ""
+                    "$mark$kind ${p.remoteAddr} ${p.rttMs}ms"
+                }
+                delay(1_000)
+            }
+        }
     }
 
     companion object {
