@@ -69,6 +69,12 @@ struct ContentView: View {
             .font(.caption)
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
+        if !peer.pathInfo.isEmpty {
+            Text(peer.pathInfo)
+                .font(.system(.caption2, design: .monospaced))
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 
     private var dragHandler: ((Float, Float) -> Void)? {

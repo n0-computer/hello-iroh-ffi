@@ -42,6 +42,7 @@ import computer.iroh.dot.net.IrohPeer
 fun EndpointScreen(viewModel: MainViewModel) {
     val state by viewModel.peer.state.collectAsState()
     val endpointId by viewModel.peer.endpointId.collectAsState()
+    val pathInfo by viewModel.peer.pathInfo.collectAsState()
     val context = LocalContext.current
     var peerIdInput by remember { mutableStateOf("") }
 
@@ -94,6 +95,15 @@ fun EndpointScreen(viewModel: MainViewModel) {
                     text = stateLabel(state),
                     color = stateColor(state),
                     modifier = Modifier.align(Alignment.CenterVertically),
+                )
+            }
+
+            if (pathInfo.isNotEmpty()) {
+                Text(
+                    text = pathInfo,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontFamily = FontFamily.Monospace,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
