@@ -33,18 +33,6 @@ android {
         )
     }
 
-    // iroh-ffi's kotlin module is a JVM library, not an Android library.
-    // Until it publishes an Android-friendly Maven artifact, consume the
-    // generated bindings and the pre-built per-ABI .so files directly
-    // from the sibling iroh-ffi checkout. Once published, delete these
-    // source-set lines and add the artifact as a normal dependency.
-    sourceSets {
-        getByName("main") {
-            java.srcDirs("../../../iroh-ffi/kotlin/lib/src/main/kotlin")
-            jniLibs.srcDirs("../../../iroh-ffi/kotlin/lib/src/main/jniLibs")
-        }
-    }
-
     packaging {
         resources {
             excludes += setOf("/META-INF/{AL2.0,LGPL2.1}")
@@ -86,10 +74,13 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
 
-    // iroh-ffi bindings consume these transitively when published. Until
-    // then we declare them explicitly because we're pulling raw .kt source.
+    // iroh-ffi declares JNA as a plain jar transitively. On Android we
+    // need the @aar variant, which bundles libjnidispatch.so per ABI;
+    // excluding the transitive jar avoids a duplicate-class conflict.
+    implementation("computer.iroh:iroh:1.0.0-rc.1") {
+        exclude(group = "net.java.dev.jna", module = "jna")
+    }
     implementation("net.java.dev.jna:jna:5.15.0@aar")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
