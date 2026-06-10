@@ -6,15 +6,16 @@
 //
 
 import SwiftUI
+import Foundation
 
 @main
 struct HelloIrohApp: App {
     init() {
-        print("[HelloIroh] checkpoint A: HelloIrohApp.init")
+        NSLog("[HelloIroh] checkpoint A: HelloIrohApp.init")
     }
 
     var body: some Scene {
-        let _ = print("[HelloIroh] checkpoint B: HelloIrohApp.body")
+        let _ = NSLog("[HelloIroh] checkpoint B: HelloIrohApp.body")
         WindowGroup {
             ContentView()
         }

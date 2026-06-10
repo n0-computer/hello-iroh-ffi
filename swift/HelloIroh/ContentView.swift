@@ -7,7 +7,7 @@ struct ContentView: View {
     @State private var showingSettings = false
 
     var body: some View {
-        let _ = print("[HelloIroh] checkpoint C: ContentView.body, peer=\(peer == nil ? "nil" : "set")")
+        let _ = NSLog("[HelloIroh] checkpoint C: ContentView.body, peer=%@", peer == nil ? "nil" : "set")
         VStack(spacing: 12) {
             if let peer {
                 header(peer: peer)
@@ -26,15 +26,15 @@ struct ContentView: View {
         }
         .padding()
         .task {
-            print("[HelloIroh] checkpoint D: .task fired")
+            NSLog("[HelloIroh] checkpoint D: .task fired")
             if peer == nil {
-                print("[HelloIroh] checkpoint E: creating IrohPeer")
+                NSLog("[HelloIroh] checkpoint E: creating IrohPeer")
                 let p = IrohPeer(motion: motion)
                 peer = p
                 motion.start()
-                print("[HelloIroh] checkpoint F: about to call peer.start()")
+                NSLog("[HelloIroh] checkpoint F: about to call peer.start()")
                 await p.start()
-                print("[HelloIroh] checkpoint G: peer.start() returned")
+                NSLog("[HelloIroh] checkpoint G: peer.start() returned")
             }
         }
         .sheet(isPresented: $showingSettings) {
