@@ -8,6 +8,8 @@ A minimal presence demo over [iroh](https://github.com/n0-computer/iroh), implem
 |---|---|---|---|
 | iOS + macOS | Swift / SwiftUI | working | [swift/README.md](swift/README.md) |
 | Android | Kotlin / Jetpack Compose | working | [kotlin-android/README.md](kotlin-android/README.md) |
+| Console reader | Python | working | [python/README.md](python/README.md) |
+| Console reader | JavaScript (Node) | working | [js/README.md](js/README.md) |
 
 Both implementations consume [iroh-ffi](https://github.com/n0-computer/iroh-ffi) from public registries: Swift Package Manager on Apple platforms, Maven Central on Android. No Rust toolchain or local iroh-ffi checkout is needed. Read more about the language bindings at [docs.iroh.computer/languages](https://docs.iroh.computer/languages).
 
@@ -38,7 +40,9 @@ hello-iroh-ffi/
 ├── README.md
 ├── demo.gif
 ├── swift/              iOS + macOS app (Swift / SwiftUI)
-└── kotlin-android/     Android app (Kotlin / Jetpack Compose)
+├── kotlin-android/     Android app (Kotlin / Jetpack Compose)
+├── python/             headless console reader (Python)
+└── js/                 headless console reader (JavaScript / Node)
 ```
 
 ## Further reading

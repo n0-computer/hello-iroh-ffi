@@ -1,0 +1,14 @@
+{
+  "name": "hello-iroh-dot-reader",
+  "version": "0.1.0",
+  "description": "Headless console reader for the hello-iroh dot demo",
+  "main": "read-dots.js",
+  "type": "module",
+  "scripts": {
+    "start": "node read-dots.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@number0/iroh": "^1.0.0-rc.1"
+  }
+}

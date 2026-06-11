@@ -7,6 +7,10 @@
 # Working notes, kept out of the repo by convention
 plans/
 
+# Console readers: local deps
+python/.venv/
+js/node_modules/
+
 # Xcode user state
 xcuserdata/
 *.xcuserstate
