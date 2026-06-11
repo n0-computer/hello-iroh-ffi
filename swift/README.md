@@ -11,7 +11,7 @@ The endpoint id is persisted across launches, so the copy/paste happens once and
 - macOS with [Xcode](https://developer.apple.com/xcode/) 16 or newer
 - A free Apple Developer account if you want to run on a physical iPhone
 
-That's it. The Xcode project consumes iroh-ffi as a remote Swift Package pinned to `1.0.0-rc.1`; SPM downloads a prebuilt xcframework, so no Rust toolchain or iroh-ffi checkout is needed.
+That's it. The Xcode project consumes iroh-ffi as a remote Swift Package pinned to `1.0.0`; SPM downloads a prebuilt xcframework, so no Rust toolchain or iroh-ffi checkout is needed.
 
 ## Build and run
 

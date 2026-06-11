@@ -9,6 +9,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@number0/iroh": "^1.0.0-rc.1"
+    "@number0/iroh": "^1.0.0"
   }
 }

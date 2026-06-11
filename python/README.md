@@ -10,7 +10,7 @@ Uses the [iroh Python bindings](https://docs.iroh.computer/languages/python).
 
 ```bash
 uv venv --python 3.12 .venv
-uv pip install --python .venv/bin/python --prerelease=allow 'iroh==1.0.0rc1'
+uv pip install --python .venv/bin/python 'iroh==1.0.0'
 ```
 
 ## Run

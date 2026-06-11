@@ -77,7 +77,7 @@ dependencies {
     // iroh-ffi declares JNA as a plain jar transitively. On Android we
     // need the @aar variant, which bundles libjnidispatch.so per ABI;
     // excluding the transitive jar avoids a duplicate-class conflict.
-    implementation("computer.iroh:iroh:1.0.0-rc.1") {
+    implementation("computer.iroh:iroh:1.0.0") {
         exclude(group = "net.java.dev.jna", module = "jna")
     }
     implementation("net.java.dev.jna:jna:5.15.0@aar")
